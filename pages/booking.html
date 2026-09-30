@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Booking — vAccess</title>
+  <meta name="description" content="Create a new venue booking at your college." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+  <style>
+    .step-panel { display:none; }
+    .step-panel.active { display:block; }
+    .booking-container { max-width: 800px; margin: 0 auto; }
+    .venue-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:var(--space-3); }
+    .selected-summary { background:var(--color-primary-50);border:1px solid var(--color-primary-200);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:var(--space-5); }
+    .selected-summary-title { font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-primary-700);margin-bottom:var(--space-3); }
+    .review-section { background:var(--color-gray-50);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5);margin-bottom:var(--space-4); }
+    .review-section-title { font-size:var(--font-size-sm);font-weight:700;color:var(--color-gray-700);margin-bottom:var(--space-3);text-transform:uppercase;letter-spacing:.05em; }
+    .confirmation-screen { text-align:center;padding:var(--space-12) var(--space-6); }
+    .confirmation-icon { font-size:4rem;margin-bottom:var(--space-4); }
+    .confirmation-id { font-size:var(--font-size-2xl);font-weight:800;color:var(--color-primary);font-family:var(--font-display); }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <a href="student-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon">🏛️</div>
+      <div><div class="sidebar-brand-text">vAccess</div><div class="sidebar-brand-sub">Venue Booking</div></div>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <ul>
+        <li><a href="student-dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li><a href="booking.html" class="active"><span class="nav-icon">➕</span> New Booking</a></li>
+        <li><a href="venues.html"><span class="nav-icon">🏛️</span> Browse Venues</a></li>
+        <li><a href="my-bookings.html"><span class="nav-icon">📋</span> My Bookings</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li><a href="notifications.html"><span class="nav-icon">🔔</span> Notifications <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span></a></li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Loading...</div>
+          <div class="sidebar-user-role" id="sidebar-role">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="topbar-toggle" aria-label="Toggle sidebar">☰</button>
+        <div class="topbar-breadcrumb"><span>vAccess</span><span>/</span><strong>New Booking</strong></div>
+      </div>
+      <div class="topbar-right">
+        <a href="notifications.html" class="topbar-btn" aria-label="Notifications">🔔<span class="badge-indicator" id="notif-badge-indicator" style="display:none;"></span></a>
+        <a href="profile.html" class="topbar-btn" aria-label="Profile">👤</a>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div class="booking-container">
+        <div class="page-header">
+          <h1 class="page-title">➕ New Booking</h1>
+          <p class="page-subtitle">Follow the steps below to book a venue.</p>
+        </div>
+
+        <!-- Booking Steps -->
+        <div class="booking-steps" id="booking-steps" role="list" aria-label="Booking steps">
+          <div class="step-item active" id="step-ind-1" role="listitem">
+            <div class="step-num">1</div><span class="step-label">Select Venue</span>
+          </div>
+          <div class="step-connector" id="sc-1"></div>
+          <div class="step-item" id="step-ind-2" role="listitem">
+            <div class="step-num">2</div><span class="step-label">Date & Time</span>
+          </div>
+          <div class="step-connector" id="sc-2"></div>
+          <div class="step-item" id="step-ind-3" role="listitem">
+            <div class="step-num">3</div><span class="step-label">Details</span>
+          </div>
+          <div class="step-connector" id="sc-3"></div>
+          <div class="step-item" id="step-ind-4" role="listitem">
+            <div class="step-num">4</div><span class="step-label">Review</span>
+          </div>
+        </div>
+
+        <!-- ======== STEP 1: Select Venue ======== -->
+        <div class="step-panel active card" id="step-1">
+          <div class="card-header">
+            <div class="card-title">🏛️ Step 1: Select a Venue</div>
+          </div>
+          <div class="card-body">
+            <!-- Mini filter -->
+            <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-5);flex-wrap:wrap;">
+              <div class="search-wrapper" style="flex:1;min-width:160px;">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="form-control" id="s1-search" placeholder="Search venues..." aria-label="Search venues" />
+              </div>
+              <select class="form-control" id="s1-type" style="max-width:180px;" aria-label="Filter by type">
+                <option value="">All Types</option>
+              </select>
+              <select class="form-control" id="s1-status" style="max-width:160px;" aria-label="Filter by status">
+                <option value="">Any Status</option>
+                <option value="Available">Available Only</option>
+              </select>
+            </div>
+
+            <div class="venue-grid" id="venue-grid">
+              <div class="loading-state"><div class="spinner"></div></div>
+            </div>
+
+            <div class="empty-state hidden" id="s1-empty">
+              <div class="empty-state-icon">🏛️</div>
+              <h3>No venues found</h3>
+              <p>Try adjusting your search.</p>
+            </div>
+          </div>
+          <div class="card-footer" style="display:flex;justify-content:flex-end;">
+            <button class="btn btn-primary" id="s1-next" disabled>Next: Date & Time →</button>
+          </div>
+        </div>
+
+        <!-- ======== STEP 2: Date & Time ======== -->
+        <div class="step-panel card" id="step-2">
+          <div class="card-header">
+            <div class="card-title">📅 Step 2: Select Date & Time Slot</div>
+          </div>
+          <div class="card-body">
+            <!-- Selected venue summary -->
+            <div class="selected-summary" id="s2-venue-summary"></div>
+
+            <div class="form-group">
+              <label class="form-label" for="s2-date">Event Date <span class="required">*</span></label>
+              <input type="date" class="form-control" id="s2-date" style="max-width:240px;" />
+            </div>
+
+            <!-- Timeslots -->
+            <div class="timeslot-section" id="timeslot-section" style="display:none;">
+              <div class="timeslot-header">
+                <div class="timeslot-date-label" id="ts-date-label">—</div>
+                <div class="timeslot-legend">
+                  <div class="legend-item"><div class="legend-dot available"></div>Available</div>
+                  <div class="legend-item"><div class="legend-dot booked"></div>Booked</div>
+                  <div class="legend-item"><div class="legend-dot selected"></div>Selected</div>
+                </div>
+              </div>
+              <div class="timeslot-grid" id="timeslot-grid" role="group" aria-label="Available time slots">
+                <!-- Rendered by JS -->
+              </div>
+            </div>
+
+            <div class="empty-state hidden" id="no-slots-msg">
+              <div class="empty-state-icon">🕐</div>
+              <h3>No slots available</h3>
+              <p>All time slots are booked for this date. Please try a different date.</p>
+            </div>
+          </div>
+          <div class="card-footer" style="display:flex;justify-content:space-between;">
+            <button class="btn btn-outline" id="s2-back">← Back</button>
+            <button class="btn btn-primary" id="s2-next" disabled>Next: Details →</button>
+          </div>
+        </div>
+
+        <!-- ======== STEP 3: Booking Details ======== -->
+        <div class="step-panel card" id="step-3">
+          <div class="card-header">
+            <div class="card-title">📝 Step 3: Booking Details</div>
+          </div>
+          <div class="card-body">
+            <div class="selected-summary" id="s3-summary"></div>
+            <form id="booking-details-form" novalidate>
+              <div class="form-group">
+                <label class="form-label" for="s3-purpose">Purpose / Event Name <span class="required">*</span></label>
+                <input type="text" class="form-control" id="s3-purpose" placeholder="e.g. IEEE Technical Talk, Cultural Fest Meeting" required maxlength="200" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="s3-members">Number of Members / Attendees <span class="required">*</span></label>
+                <input type="number" class="form-control" id="s3-members" placeholder="e.g. 50" min="1" required style="max-width:200px;" />
+                <div class="form-hint" id="s3-capacity-hint"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Requester Information</label>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="info-label">Name</div>
+                    <div class="info-value" id="s3-req-name">—</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="s3-req-email">—</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value" id="s3-req-dept">—</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label">Role</div>
+                    <div class="info-value" id="s3-req-role">—</div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer" style="display:flex;justify-content:space-between;">
+            <button class="btn btn-outline" id="s3-back">← Back</button>
+            <button class="btn btn-primary" id="s3-next">Next: Review →</button>
+          </div>
+        </div>
+
+        <!-- ======== STEP 4: Review & Submit ======== -->
+        <div class="step-panel card" id="step-4">
+          <div class="card-header">
+            <div class="card-title">🔍 Step 4: Review & Confirm</div>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info">
+              <span class="alert-icon">ℹ️</span>
+              Please review your booking details before submitting. Once submitted, your booking will be marked as <strong>Pending</strong> and sent for admin approval.
+            </div>
+            <div id="review-content"></div>
+          </div>
+          <div class="card-footer" style="display:flex;justify-content:space-between;">
+            <button class="btn btn-outline" id="s4-back">← Edit Details</button>
+            <button class="btn btn-primary btn-lg" id="s4-submit">✓ Submit Booking</button>
+          </div>
+        </div>
+
+        <!-- ======== CONFIRMATION ======== -->
+        <div class="step-panel card" id="step-confirm">
+          <div class="card-body">
+            <div class="confirmation-screen">
+              <div class="confirmation-icon">🎉</div>
+              <h2 style="font-family:var(--font-display);font-weight:800;color:var(--color-gray-900);margin-bottom:var(--space-2);">Booking Submitted!</h2>
+              <p style="color:var(--color-text-muted);margin-bottom:var(--space-4);">Your booking has been submitted successfully.</p>
+              <div class="confirmation-id" id="confirmation-bid">—</div>
+              <div style="margin-top:var(--space-2);color:var(--color-text-muted);font-size:var(--font-size-sm);">Status: <span class="badge badge-pending badge-dot">Pending</span></div>
+              <p style="margin-top:var(--space-4);font-size:var(--font-size-sm);color:var(--color-text-muted);max-width:400px;margin-left:auto;margin-right:auto;">
+                You'll receive a notification when an admin reviews your booking. Check <a href="my-bookings.html">My Bookings</a> for updates.
+              </p>
+              <div style="display:flex;gap:var(--space-3);justify-content:center;margin-top:var(--space-8);">
+                <a href="my-bookings.html" class="btn btn-primary">View My Bookings</a>
+                <a href="booking.html" class="btn btn-outline">Make Another Booking</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /booking-container -->
+    </main>
+  </div>
+</div>
+
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay">
+  <div class="modal"><div class="modal-body">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title"></div>
+    <div class="confirm-message" id="confirm-message"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-outline" data-modal-close>Cancel</button>
+    <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+  </div></div>
+</div>
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/app.js"></script>
+<script>
+// State
+let selectedVenue = null;
+let selectedDate  = null;
+let selectedSlot  = null;
+let currentStep   = 1;
+
+document.addEventListener('DOMContentLoaded', () => {
+  requireUser();
+
+  // Check for pre-selected venue from URL
+  const preVenueId = getParam('venue');
+  if (preVenueId) {
+    const v = getVenueById(preVenueId);
+    if (v) selectVenue(v);
+  }
+
+  // Populate filters
+  const typeEl = el('s1-type');
+  getVenueTypes().forEach(t => {
+    const o = document.createElement('option'); o.value = t; o.textContent = t; typeEl.appendChild(o);
+  });
+
+  renderVenueGrid();
+
+  // Events
+  el('s1-search').addEventListener('input', debounce(renderVenueGrid, 250));
+  el('s1-type').addEventListener('change', renderVenueGrid);
+  el('s1-status').addEventListener('change', renderVenueGrid);
+
+  el('s1-next').addEventListener('click', () => goToStep(2));
+  el('s2-back').addEventListener('click', () => goToStep(1));
+  el('s3-back').addEventListener('click', () => goToStep(2));
+  el('s4-back').addEventListener('click', () => goToStep(3));
+
+  el('s2-date').min = today();
+  el('s2-date').addEventListener('change', () => {
+    selectedDate = el('s2-date').value;
+    selectedSlot = null;
+    el('s2-next').disabled = true;
+    renderTimeslots();
+  });
+
+  el('s2-next').addEventListener('click', () => goToStep(3));
+  el('s3-next').addEventListener('click', () => {
+    if (validateStep3()) goToStep(4);
+  });
+  el('s4-submit').addEventListener('click', submitBooking);
+
+  // Sidebar logout
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({ title:'Log Out', message:'Log out?', icon:'🚪', confirmText:'Log Out', confirmClass:'btn-primary', onConfirm:logout });
+  });
+
+  // If venue pre-selected, skip to step 2
+  if (preVenueId && selectedVenue) goToStep(2);
+});
+
+function goToStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  el(`step-${n}`)?.classList.add('active');
+
+  // Update indicators
+  for (let i = 1; i <= 4; i++) {
+    const ind = el(`step-ind-${i}`);
+    const sc  = el(`sc-${i}`);
+    if (!ind) continue;
+    ind.classList.remove('active','done');
+    if (i < n)  { ind.classList.add('done'); sc && sc.classList.add('done'); }
+    if (i === n) ind.classList.add('active');
+    if (i > n && sc) sc.classList.remove('done');
+  }
+
+  currentStep = n;
+  if (n === 3) populateStep3();
+  if (n === 4) populateReview();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---- STEP 1 ----
+function renderVenueGrid() {
+  const filters = {
+    search:  el('s1-search').value,
+    vType:   el('s1-type').value,
+    status:  el('s1-status').value,
+  };
+  const venues = filterVenues(filters);
+  const grid   = el('venue-grid');
+  const emptyEl = el('s1-empty');
+
+  if (venues.length === 0) {
+    grid.innerHTML = '';
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+  emptyEl.classList.add('hidden');
+
+  grid.innerHTML = venues.map(v => `
+    <div class="venue-selector-card ${selectedVenue && selectedVenue.V_ID === v.V_ID ? 'selected' : ''} ${v.V_Status !== 'Available' ? 'opacity-50' : ''}"
+      data-vid="${v.V_ID}" role="button" tabindex="0" aria-label="Select ${v.V_type} – ${v.SubType}"
+      style="${v.V_Status !== 'Available' ? 'opacity:.55;cursor:not-allowed;' : 'cursor:pointer;'}">
+      <div class="venue-selector-icon">${getVenueIcon(v.V_type)}</div>
+      <div class="venue-selector-info">
+        <div class="venue-selector-name">${v.V_type} – ${v.SubType}</div>
+        <div class="venue-selector-meta">${v.Category} · 👥 ${v.Capacity} · ${v.V_ID}</div>
+        <div style="margin-top:4px;">${venueStatusBadge(v.V_Status)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Click handlers
+  grid.querySelectorAll('.venue-selector-card').forEach(card => {
+    if (card.style.cursor === 'not-allowed') return;
+    card.addEventListener('click', () => {
+      const v = getVenueById(card.dataset.vid);
+      if (v) selectVenue(v);
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+    });
+  });
+}
+
+function selectVenue(v) {
+  selectedVenue = v;
+  selectedSlot  = null;
+  selectedDate  = null;
+  el('s1-next').disabled = false;
+  renderVenueGrid();
+}
+
+// ---- STEP 2 ----
+function renderTimeslots() {
+  if (!selectedVenue || !selectedDate) return;
+  const section = el('timeslot-section');
+  const grid    = el('timeslot-grid');
+  const noSlots = el('no-slots-msg');
+  section.style.display = 'block';
+  el('ts-date-label').textContent = formatDate(selectedDate);
+
+  const slots = getAvailableSlots(selectedVenue.V_ID, selectedDate);
+  const availableSlots = slots.filter(s => !s.isBooked);
+
+  if (availableSlots.length === 0) {
+    grid.innerHTML = '';
+    noSlots.classList.remove('hidden');
+  } else {
+    noSlots.classList.add('hidden');
+    grid.innerHTML = slots.map(s => `
+      <button type="button"
+        class="timeslot-item ${s.isBooked ? 'booked' : (selectedSlot && selectedSlot.StartTime === s.StartTime ? 'selected' : 'available')}"
+        data-start="${s.StartTime}" data-end="${s.EndTime}"
+        ${s.isBooked ? 'disabled aria-disabled="true"' : ''}
+        aria-label="${s.label} – ${s.isBooked ? 'Booked' : 'Available'}"
+        aria-pressed="${selectedSlot && selectedSlot.StartTime === s.StartTime}">
+        <div class="timeslot-time">${s.label}</div>
+        <div class="timeslot-status-label">${s.isBooked ? '🔒 Booked' : '✓ Available'}</div>
+      </button>
+    `).join('');
+
+    // Click handlers
+    grid.querySelectorAll('.timeslot-item:not(.booked)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedSlot = { StartTime: btn.dataset.start, EndTime: btn.dataset.end, label: `${btn.dataset.start} – ${btn.dataset.end}` };
+        el('s2-next').disabled = false;
+        // Re-render with selected state
+        grid.querySelectorAll('.timeslot-item').forEach(b => {
+          if (!b.disabled) {
+            b.classList.remove('selected','available');
+            b.classList.add(b.dataset.start === selectedSlot.StartTime ? 'selected' : 'available');
+            b.setAttribute('aria-pressed', b.dataset.start === selectedSlot.StartTime);
+            b.querySelector('.timeslot-status-label').textContent = b.dataset.start === selectedSlot.StartTime ? '✓ Selected' : '✓ Available';
+          }
+        });
+      });
+    });
+  }
+
+  // Venue summary
+  el('s2-venue-summary').innerHTML = `
+    <div class="selected-summary-title">Selected Venue</div>
+    <div style="display:flex;align-items:center;gap:var(--space-3);">
+      <span style="font-size:1.5rem;">${getVenueIcon(selectedVenue.V_type)}</span>
+      <div>
+        <div style="font-weight:700;font-size:var(--font-size-base);">${getVenueDisplayName(selectedVenue)}</div>
+        <div style="font-size:var(--font-size-xs);color:var(--color-text-muted);">${selectedVenue.Category} · 👥 ${selectedVenue.Capacity}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ---- STEP 3 ----
+function populateStep3() {
+  const session = getSession();
+  el('s3-req-name').textContent  = session.name;
+  el('s3-req-email').textContent = session.email;
+  el('s3-req-dept').textContent  = session.dept || '—';
+  el('s3-req-role').textContent  = session.role.charAt(0).toUpperCase() + session.role.slice(1);
+  el('s3-capacity-hint').textContent = selectedVenue ? `Venue capacity: ${selectedVenue.Capacity} persons.` : '';
+  el('s3-summary').innerHTML = `
+    <div class="selected-summary-title">Booking Summary So Far</div>
+    <div class="info-grid">
+      <div class="info-item"><div class="info-label">Venue</div><div class="info-value">${getVenueDisplayName(selectedVenue)}</div></div>
+      <div class="info-item"><div class="info-label">Date</div><div class="info-value">${formatDate(selectedDate)}</div></div>
+      <div class="info-item"><div class="info-label">Time</div><div class="info-value">${selectedSlot ? selectedSlot.label : '—'}</div></div>
+    </div>
+  `;
+}
+
+function validateStep3() {
+  const purpose = el('s3-purpose').value.trim();
+  const members = parseInt(el('s3-members').value, 10);
+  if (!purpose) { showToast('Please enter a purpose for the booking.', 'error'); el('s3-purpose').focus(); return false; }
+  if (!members || members < 1) { showToast('Please enter a valid number of members.', 'error'); el('s3-members').focus(); return false; }
+  if (selectedVenue && members > selectedVenue.Capacity) {
+    showToast(`Number of members (${members}) exceeds venue capacity (${selectedVenue.Capacity}).`, 'error'); return false;
+  }
+  return true;
+}
+
+// ---- STEP 4 ----
+function populateReview() {
+  const session = getSession();
+  el('review-content').innerHTML = `
+    <div class="review-section">
+      <div class="review-section-title">🏛️ Venue</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Venue</div><div class="info-value">${getVenueDisplayName(selectedVenue)}</div></div>
+        <div class="info-item"><div class="info-label">Category</div><div class="info-value">${selectedVenue.Category}</div></div>
+        <div class="info-item"><div class="info-label">Capacity</div><div class="info-value">👥 ${selectedVenue.Capacity}</div></div>
+        <div class="info-item"><div class="info-label">Contact</div><div class="info-value">${selectedVenue.ContactNo}</div></div>
+      </div>
+    </div>
+    <div class="review-section">
+      <div class="review-section-title">📅 Schedule</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Event Date</div><div class="info-value">${formatDate(selectedDate)}</div></div>
+        <div class="info-item"><div class="info-label">Time Slot</div><div class="info-value">${selectedSlot ? `${formatTime(selectedSlot.StartTime)} – ${formatTime(selectedSlot.EndTime)}` : '—'}</div></div>
+      </div>
+    </div>
+    <div class="review-section">
+      <div class="review-section-title">📝 Event Details</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Purpose</div><div class="info-value">${el('s3-purpose').value}</div></div>
+        <div class="info-item"><div class="info-label">Members</div><div class="info-value">👥 ${el('s3-members').value}</div></div>
+      </div>
+    </div>
+    <div class="review-section">
+      <div class="review-section-title">👤 Requester</div>
+      <div class="info-grid">
+        <div class="info-item"><div class="info-label">Name</div><div class="info-value">${session.name}</div></div>
+        <div class="info-item"><div class="info-label">Email</div><div class="info-value">${session.email}</div></div>
+        <div class="info-item"><div class="info-label">Dept</div><div class="info-value">${session.dept || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Role</div><div class="info-value">${session.role}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+// ---- SUBMIT ----
+function submitBooking() {
+  const btn = el('s4-submit');
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+
+  setTimeout(() => {
+    try {
+      const newBooking = createBooking({
+        V_ID:       selectedVenue.V_ID,
+        Purpose:    el('s3-purpose').value.trim(),
+        noOfMembers: el('s3-members').value,
+        eventDate:  selectedDate,
+        startTime:  selectedSlot.StartTime,
+        endTime:    selectedSlot.EndTime,
+      });
+      el('confirmation-bid').textContent = newBooking.B_ID;
+      document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+      el('step-confirm').classList.add('active');
+      showToast('Booking submitted successfully!', 'success');
+    } catch (err) {
+      showToast('Something went wrong. Please try again.', 'error');
+      btn.textContent = '✓ Submit Booking';
+      btn.disabled = false;
+    }
+  }, 700);
+}
+</script>
+</body>
+</html>

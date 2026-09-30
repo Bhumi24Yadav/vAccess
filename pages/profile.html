@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Profile — vAccess</title>
+  <meta name="description" content="View and manage your vAccess user profile and account settings." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Main Navigation">
+    <a href="student-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon">🏛️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub">Venue Booking</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Main</div>
+      <ul>
+        <li><a href="student-dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li><a href="booking.html"><span class="nav-icon">➕</span> New Booking</a></li>
+        <li><a href="venues.html"><span class="nav-icon">🏛️</span> Browse Venues</a></li>
+        <li><a href="my-bookings.html"><span class="nav-icon">📋</span> My Bookings</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html" class="active"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Loading...</div>
+          <div class="sidebar-user-role" id="sidebar-role">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Account</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Profile</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="my-bookings.html" class="btn btn-sm btn-outline">My Bookings</a>
+        <a href="booking.html" class="btn btn-sm btn-primary">
+          <span>➕</span> <span class="topbar-btn-text">New Booking</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">User Profile</h1>
+          <p class="page-subtitle">Manage your account information and preferences</p>
+        </div>
+      </div>
+
+      <!-- Profile Header Card -->
+      <div class="card" style="margin-bottom:var(--space-6);background:linear-gradient(135deg,var(--color-gray-900) 0%,var(--color-primary-dark) 100%);color:white;border:none;">
+        <div class="card-body" style="display:flex;align-items:center;gap:var(--space-5);flex-wrap:wrap;padding:var(--space-6);">
+          <div style="width:80px;height:80px;border-radius:50%;background:var(--color-primary);color:white;font-size:2rem;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.3);" id="profile-big-avatar">
+            ?
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-bottom:var(--space-1);">
+              <h2 style="color:white;margin:0;font-size:var(--font-size-2xl);" id="profile-display-name">Loading...</h2>
+              <span class="badge" id="profile-role-badge" style="background:rgba(255,255,255,0.2);color:white;">Role</span>
+            </div>
+            <div style="color:var(--color-primary-light);font-size:var(--font-size-sm);display:flex;gap:var(--space-4);flex-wrap:wrap;">
+              <span id="profile-display-id">ID: —</span>
+              <span>•</span>
+              <span id="profile-display-dept">Dept: —</span>
+              <span>•</span>
+              <span id="profile-display-email">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Stats Grid -->
+      <div class="stats-grid" id="profile-stats-grid" style="margin-bottom:var(--space-6);">
+        <div class="stat-card">
+          <div class="stat-icon blue">📋</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Bookings</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✓</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-approved">0</div>
+            <div class="stat-label">Approved</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">⏳</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-pending">0</div>
+            <div class="stat-label">Pending Approval</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">✕</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-rejected">0</div>
+            <div class="stat-label">Rejected / Cancelled</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout: Profile Edit & Settings -->
+      <div style="display:grid;grid-template-columns:1fr;gap:var(--space-6);">
+        <!-- Personal Information -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Personal Information</h2>
+            <span style="font-size:var(--font-size-xs);color:var(--color-text-muted);">From ER Model: Student / Faculty Entity</span>
+          </div>
+          <div class="card-body">
+            <form id="profile-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="prof-id" id="prof-id-label">Identifier (Roll No / ID)</label>
+                  <input type="text" id="prof-id" class="form-control" readonly disabled />
+                  <span class="form-hint">Primary key identifier in system</span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="prof-name">Full Name</label>
+                  <input type="text" id="prof-name" class="form-control" required />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="prof-email">Email Address</label>
+                  <input type="email" id="prof-email" class="form-control" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="prof-dept">Department</label>
+                  <select id="prof-dept" class="form-control">
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Mechanical">Mechanical</option>
+                    <option value="Civil">Civil</option>
+                    <option value="Information Technology">Information Technology</option>
+                    <option value="Administration">Administration</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="prof-contact">Contact Phone Number</label>
+                <input type="tel" id="prof-contact" class="form-control" placeholder="10-digit mobile number" />
+              </div>
+
+              <div style="display:flex;justify-content:flex-end;margin-top:var(--space-4);">
+                <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Security / Password Mockup -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Security & Password</h2>
+          </div>
+          <div class="card-body">
+            <form id="password-form" onsubmit="event.preventDefault(); toast.success('Password updated successfully (mock)!'); this.reset();">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="curr-pass">Current Password</label>
+                  <input type="password" id="curr-pass" class="form-control" placeholder="••••••••" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="new-pass">New Password</label>
+                  <input type="password" id="new-pass" class="form-control" placeholder="••••••••" required minlength="6" />
+                </div>
+              </div>
+              <div style="display:flex;justify-content:flex-end;">
+                <button type="submit" class="btn btn-outline">Update Password</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireLogin();
+  const session = getSession();
+
+  // Populate Sidebar
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = session.role.charAt(0).toUpperCase() + session.role.slice(1);
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  // Big avatar & card header
+  el('profile-big-avatar').textContent = getInitials(session.name);
+  el('profile-display-name').textContent = session.name;
+  el('profile-display-id').textContent = `ID: ${session.id || session.A_ID || '—'}`;
+  el('profile-display-dept').textContent = `Dept: ${session.dept || 'General'}`;
+  el('profile-display-email').textContent = session.email;
+  el('profile-role-badge').textContent = session.role.toUpperCase();
+
+  // Form Fields
+  el('prof-id-label').textContent = session.role === 'student' ? 'Roll Number (rno)' : (session.role === 'faculty' ? 'Faculty Number (fno)' : 'Admin ID (A_ID)');
+  el('prof-id').value = session.id || session.A_ID || '';
+  el('prof-name').value = session.name || '';
+  el('prof-email').value = session.email || '';
+  if (session.dept) {
+    el('prof-dept').value = session.dept;
+  }
+  
+  // Find contact no from mock data
+  if (session.role === 'student') {
+    const students = JSON.parse(localStorage.getItem('va_students') || '[]');
+    const s = students.find(x => x.rno === session.id);
+    if (s && s.ContactNo) el('prof-contact').value = s.ContactNo;
+  }
+
+  // Populate stats
+  const stats = getMyBookingStats();
+  el('stat-total').textContent = stats.total;
+  el('stat-approved').textContent = stats.approved;
+  el('stat-pending').textContent = stats.pending;
+  el('stat-rejected').textContent = stats.rejected + stats.cancelled;
+
+  // Profile update form submission
+  el('profile-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newName = el('prof-name').value.trim();
+    const newEmail = el('prof-email').value.trim();
+    const newDept = el('prof-dept').value;
+    const newContact = el('prof-contact').value.trim();
+
+    if (!newName || !newEmail) {
+      toast.error('Please provide name and email');
+      return;
+    }
+
+    // Update session
+    session.name = newName;
+    session.email = newEmail;
+    session.dept = newDept;
+    setSession(session);
+
+    // Update in students/faculty storage if exists
+    if (session.role === 'student') {
+      const students = JSON.parse(localStorage.getItem('va_students') || '[]');
+      const idx = students.findIndex(x => x.rno === session.id);
+      if (idx !== -1) {
+        students[idx].S_name = newName;
+        students[idx].S_Email = newEmail;
+        students[idx].Dept = newDept;
+        students[idx].ContactNo = newContact;
+        localStorage.setItem('va_students', JSON.stringify(students));
+      }
+    } else if (session.role === 'faculty') {
+      const faculty = JSON.parse(localStorage.getItem('va_faculty') || '[]');
+      const idx = faculty.findIndex(x => x.fno === session.id);
+      if (idx !== -1) {
+        faculty[idx].F_name = newName;
+        faculty[idx].F_Email = newEmail;
+        faculty[idx].Dept = newDept;
+        localStorage.setItem('va_faculty', JSON.stringify(faculty));
+      }
+    }
+
+    toast.success('Profile updated successfully!');
+    el('profile-display-name').textContent = newName;
+    el('profile-display-email').textContent = newEmail;
+    el('profile-display-dept').textContent = `Dept: ${newDept}`;
+    el('sidebar-name').textContent = newName;
+    el('sidebar-avatar').textContent = getInitials(newName);
+    el('profile-big-avatar').textContent = getInitials(newName);
+  });
+
+  // Logout listener
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Are you sure you want to log out?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+</script>
+</body>
+</html>

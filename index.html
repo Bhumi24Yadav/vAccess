@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vAccess — College Venue Booking System</title>
+  <meta name="description" content="vAccess is a smart college venue booking and approval management system. Book seminar halls, auditoriums, labs and more — all in one place." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body style="background: var(--color-white);">
+
+<!-- ==================== NAVIGATION ==================== -->
+<nav class="landing-nav" aria-label="Main Navigation">
+  <a href="index.html" class="landing-brand" aria-label="vAccess Home">
+    <div class="landing-brand-icon">🏛️</div>
+    <span class="landing-brand-name">vAccess</span>
+  </a>
+  <div class="landing-nav-links" role="navigation">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#venues">Venues</a>
+  </div>
+  <div class="landing-nav-actions">
+    <a href="pages/login.html" class="btn btn-outline btn-sm" id="nav-login-btn">Log In</a>
+    <a href="pages/register.html" class="btn btn-primary btn-sm" id="nav-register-btn">Register</a>
+  </div>
+</nav>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero-section" aria-labelledby="hero-title">
+  <div class="container">
+    <div class="hero-layout">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span>🎓</span> College Venue Management System
+        </div>
+        <h1 class="hero-title" id="hero-title">
+          Book. Manage.<br><span>Simplify.</span>
+        </h1>
+        <p class="hero-desc">
+          Reserve college venues effortlessly — auditoriums, seminar halls, labs, sports grounds and more. Track approvals in real time, stay notified, and get more done.
+        </p>
+        <div class="hero-actions">
+          <a href="pages/register.html" class="btn-hero-primary" id="hero-register-btn">
+            ✦ Get Started Free
+          </a>
+          <a href="pages/login.html" class="btn-hero-secondary" id="hero-login-btn">
+            Log In →
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-value">12+</div>
+            <div class="hero-stat-label">Venues</div>
+          </div>
+          <div>
+            <div class="hero-stat-value">2</div>
+            <div class="hero-stat-label">User Roles</div>
+          </div>
+          <div>
+            <div class="hero-stat-value">4</div>
+            <div class="hero-stat-label">Booking States</div>
+          </div>
+          <div>
+            <div class="hero-stat-value">Real-time</div>
+            <div class="hero-stat-label">Approval Status</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <!-- Decorative UI mockup -->
+        <div style="background:rgba(255,255,255,0.1);border-radius:16px;padding:20px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);">
+          <div style="background:rgba(255,255,255,0.9);border-radius:12px;padding:16px;margin-bottom:12px;">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Booking Status</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>
+              <div style="font-size:13px;font-weight:600;color:#111827;flex:1;">Auditorium – Main Hall</div>
+              <div style="font-size:11px;font-weight:700;color:#16a34a;background:#dcfce7;padding:2px 8px;border-radius:99px;">Approved</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;"></div>
+              <div style="font-size:13px;font-weight:600;color:#111827;flex:1;">Seminar Hall – Block A</div>
+              <div style="font-size:11px;font-weight:700;color:#d97706;background:#fef3c7;padding:2px 8px;border-radius:99px;">Pending</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#ef4444;"></div>
+              <div style="font-size:13px;font-weight:600;color:#111827;flex:1;">Conference Room</div>
+              <div style="font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;padding:2px 8px;border-radius:99px;">Rejected</div>
+            </div>
+          </div>
+          <div style="background:rgba(255,255,255,0.9);border-radius:12px;padding:16px;">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Time Slots — Oct 15</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div style="background:#dcfce7;border:1.5px solid #22c55e;border-radius:8px;padding:8px;text-align:center;font-size:11px;font-weight:700;color:#15803d;">09:00–10:00<br><span style="font-weight:500;color:#16a34a;">Available</span></div>
+              <div style="background:#fee2e2;border:1.5px solid #ef4444;border-radius:8px;padding:8px;text-align:center;font-size:11px;font-weight:700;color:#b91c1c;">10:00–11:00<br><span style="font-weight:500;color:#dc2626;">Booked</span></div>
+              <div style="background:#dcfce7;border:1.5px solid #22c55e;border-radius:8px;padding:8px;text-align:center;font-size:11px;font-weight:700;color:#15803d;">11:00–12:00<br><span style="font-weight:500;color:#16a34a;">Available</span></div>
+              <div style="background:#dbeafe;border:2px solid #2563eb;border-radius:8px;padding:8px;text-align:center;font-size:11px;font-weight:700;color:#1d4ed8;">14:00–15:00<br><span style="font-weight:500;color:#2563eb;">Selected</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FEATURES ==================== -->
+<section class="features-section" id="features" aria-labelledby="features-title">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Key Features</div>
+      <h2 class="section-title" id="features-title">Everything you need to manage venues</h2>
+      <p class="section-desc">From browsing available venues to getting your booking approved — vAccess handles it all.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🗓️</div>
+        <h3 class="feature-title">Easy Booking</h3>
+        <p class="feature-desc">Select a venue, choose a date and time slot, fill in your details and submit — all in a guided multi-step flow.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📍</div>
+        <h3 class="feature-title">Venue Availability</h3>
+        <p class="feature-desc">See a visual calendar with available and booked time slots. No guesswork — know instantly what's free.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✅</div>
+        <h3 class="feature-title">Admin Approval</h3>
+        <p class="feature-desc">Admins can review, approve, or reject bookings with remarks — keeping the process transparent and accountable.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3 class="feature-title">Real-time Notifications</h3>
+        <p class="feature-desc">Get notified instantly when your booking status changes or when admin adds feedback to your request.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <h3 class="feature-title">Booking History</h3>
+        <p class="feature-desc">All your bookings — past and present — are tracked in one place with full details and approval history.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3 class="feature-title">Role-Based Access</h3>
+        <p class="feature-desc">Students and faculty book venues; admins manage and approve. Each role gets a tailored, focused interface.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== HOW IT WORKS ==================== -->
+<section class="how-section" id="how-it-works" aria-labelledby="how-title">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">How It Works</div>
+      <h2 class="section-title" id="how-title">Four simple steps</h2>
+      <p class="section-desc">Booking a college venue has never been this straightforward.</p>
+    </div>
+    <div class="how-it-works-grid">
+      <div class="step-card">
+        <div class="step-number-badge">1</div>
+        <div class="step-card-icon">🎓</div>
+        <h3>Register & Log In</h3>
+        <p>Create your account as a student or faculty member. Admins receive separate credentials.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number-badge">2</div>
+        <div class="step-card-icon">🏛️</div>
+        <h3>Browse Venues</h3>
+        <p>Filter venues by type, capacity, category and availability. Pick the one that suits your event.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number-badge">3</div>
+        <div class="step-card-icon">📅</div>
+        <h3>Select Date & Time Slot</h3>
+        <p>Use the interactive calendar and time-slot grid to pick an available slot for your event date.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number-badge">4</div>
+        <div class="step-card-icon">🔔</div>
+        <h3>Track Approval</h3>
+        <p>Submit your booking and track its status in real-time. Get notified when the admin approves or rejects it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== VENUE PREVIEW ==================== -->
+<section id="venues" style="padding:var(--space-20) 0; background: var(--color-white);" aria-labelledby="venues-preview-title">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Venues</div>
+      <h2 class="section-title" id="venues-preview-title">Wide range of campus venues</h2>
+      <p class="section-desc">From intimate conference rooms to large auditoriums — find the right space for every occasion.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card" style="background:linear-gradient(135deg,#eff6ff,#fff);">
+        <div class="feature-icon" style="background:var(--color-primary-100);">🎭</div>
+        <h3 class="feature-title">Auditoriums</h3>
+        <p class="feature-desc">Large event spaces for cultural programs, convocations, and guest lectures. Capacity: 200–500.</p>
+      </div>
+      <div class="feature-card" style="background:linear-gradient(135deg,#f0fdf4,#fff);">
+        <div class="feature-icon" style="background:var(--color-success-100);">🎓</div>
+        <h3 class="feature-title">Seminar Halls</h3>
+        <p class="feature-desc">Academic halls equipped with AV systems for workshops, seminars, and presentations. Capacity: 80–120.</p>
+      </div>
+      <div class="feature-card" style="background:linear-gradient(135deg,#fffbeb,#fff);">
+        <div class="feature-icon" style="background:var(--color-warning-100);">💼</div>
+        <h3 class="feature-title">Conference Rooms</h3>
+        <p class="feature-desc">Compact meeting rooms for committee discussions, project reviews, and faculty meetings. Capacity: 20–30.</p>
+      </div>
+      <div class="feature-card" style="background:linear-gradient(135deg,#fef2f2,#fff);">
+        <div class="feature-icon" style="background:var(--color-danger-100);">⚽</div>
+        <h3 class="feature-title">Sports Grounds</h3>
+        <p class="feature-desc">Football fields, basketball courts and open grounds for sports events and team activities.</p>
+      </div>
+      <div class="feature-card" style="background:linear-gradient(135deg,#ecfeff,#fff);">
+        <div class="feature-icon" style="background:#ecfeff; color:var(--color-cyan-600);">🔬</div>
+        <h3 class="feature-title">Laboratories</h3>
+        <p class="feature-desc">Computer labs and electronics labs available for technical workshops and training sessions.</p>
+      </div>
+      <div class="feature-card" style="background:linear-gradient(135deg,#f0fdf4,#fff);">
+        <div class="feature-icon" style="background:#f0fdf4; color:var(--color-success-600);">🌳</div>
+        <h3 class="feature-title">Open Grounds</h3>
+        <p class="feature-desc">Large outdoor areas for fests, cultural events, and gatherings. Capacity: up to 2000 people.</p>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:var(--space-10);">
+      <a href="pages/login.html" class="btn btn-primary btn-lg" id="browse-venues-btn">Browse All Venues →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== CTA ==================== -->
+<section class="cta-section" aria-labelledby="cta-title">
+  <div class="container">
+    <h2 id="cta-title">Ready to book your venue?</h2>
+    <p>Join students and faculty who manage their campus event spaces through vAccess.</p>
+    <div class="cta-actions">
+      <a href="pages/register.html" class="btn-hero-primary" id="cta-register-btn">✦ Create Account</a>
+      <a href="pages/login.html" class="btn-hero-secondary" id="cta-login-btn">Already have an account? Log In</a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="landing-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-name">🏛️ vAccess</div>
+        <p class="footer-brand-desc">A college venue booking and approval management system. Built for students and faculty.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Navigation</div>
+        <ul class="footer-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#venues">Venues</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Account</div>
+        <ul class="footer-links">
+          <li><a href="pages/login.html">Student Login</a></li>
+          <li><a href="pages/login.html">Faculty Login</a></li>
+          <li><a href="pages/login.html">Admin Login</a></li>
+          <li><a href="pages/register.html">Register</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Project Info</div>
+        <ul class="footer-links">
+          <li><a href="#">College Management System</a></li>
+          <li><a href="#">Frontend Demo (No Backend)</a></li>
+          <li><a href="#">ER Model Based Design</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 vAccess. College Venue Booking System.</span>
+      <span style="font-size:var(--font-size-xs);opacity:0.6;">⚠️ Demo project — not for production use.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/mock-data.js"></script>
+<script>
+  // If already logged in, show dashboard links
+  document.addEventListener('DOMContentLoaded', () => {
+    const session = JSON.parse(localStorage.getItem('va_session') || 'null');
+    if (session) {
+      const navActions = document.querySelector('.landing-nav-actions');
+      if (navActions) {
+        const dashUrl = session.role === 'admin' ? 'pages/admin-dashboard.html' : 'pages/student-dashboard.html';
+        navActions.innerHTML = `
+          <a href="${dashUrl}" class="btn btn-primary btn-sm">Go to Dashboard →</a>
+        `;
+      }
+    }
+  });
+</script>
+</body>
+</html>

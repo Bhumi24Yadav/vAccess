@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications — vAccess</title>
+  <meta name="description" content="View and manage your venue booking notifications." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Main Navigation">
+    <a href="student-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon">🏛️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub">Venue Booking</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Main</div>
+      <ul>
+        <li><a href="student-dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li><a href="booking.html"><span class="nav-icon">➕</span> New Booking</a></li>
+        <li><a href="venues.html"><span class="nav-icon">🏛️</span> Browse Venues</a></li>
+        <li><a href="my-bookings.html"><span class="nav-icon">📋</span> My Bookings</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html" class="active">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Loading...</div>
+          <div class="sidebar-user-role" id="sidebar-role">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Account</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Notifications</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="booking.html" class="btn btn-sm btn-primary">
+          <span>➕</span> <span class="topbar-btn-text">New Booking</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Notifications</h1>
+          <p class="page-subtitle">Stay updated on your booking requests, approvals, and reminders</p>
+        </div>
+        <div style="display:flex;gap:var(--space-2);">
+          <button class="btn btn-secondary btn-sm" id="btn-mark-all-read">
+            <span>✓✓</span> Mark All as Read
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter tabs -->
+      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-5);border-bottom:1px solid var(--color-border);padding-bottom:var(--space-3);">
+        <button class="btn btn-sm btn-primary" id="tab-all" onclick="filterNotifs('all')">All (<span id="count-all">0</span>)</button>
+        <button class="btn btn-sm btn-outline" id="tab-unread" onclick="filterNotifs('unread')">Unread (<span id="count-unread">0</span>)</button>
+        <button class="btn btn-sm btn-outline" id="tab-read" onclick="filterNotifs('read')">Read (<span id="count-read">0</span>)</button>
+      </div>
+
+      <!-- Notifications Container -->
+      <div class="card">
+        <div class="card-body" style="padding:0;">
+          <div id="notifications-list" class="notification-list"></div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state hidden" id="notif-empty">
+        <div class="empty-state-icon">🔔</div>
+        <h3>No notifications</h3>
+        <p id="notif-empty-desc">You are all caught up! No notifications to show right now.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/app.js"></script>
+<script>
+let currentFilter = 'all';
+
+document.addEventListener('DOMContentLoaded', () => {
+  requireUser();
+  const session = getSession();
+
+  // Sidebar user
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = session.role.charAt(0).toUpperCase() + session.role.slice(1);
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  // Logout listener
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Are you sure you want to log out?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+
+  // Mark all read button
+  el('btn-mark-all-read').addEventListener('click', () => {
+    markAllNotificationsRead();
+    toast.success('All notifications marked as read');
+    renderPageNotifications();
+  });
+
+  renderPageNotifications();
+});
+
+function filterNotifs(type) {
+  currentFilter = type;
+  ['tab-all', 'tab-unread', 'tab-read'].forEach(id => {
+    const btn = el(id);
+    if (id === `tab-${type}`) {
+      btn.className = 'btn btn-sm btn-primary';
+    } else {
+      btn.className = 'btn btn-sm btn-outline';
+    }
+  });
+  renderPageNotifications();
+}
+
+function renderPageNotifications() {
+  const allNotifs = getMyNotifications();
+  const unreadCount = allNotifs.filter(n => !n.isRead).length;
+  const readCount = allNotifs.filter(n => n.isRead).length;
+
+  el('count-all').textContent = allNotifs.length;
+  el('count-unread').textContent = unreadCount;
+  el('count-read').textContent = readCount;
+
+  let filtered = allNotifs;
+  if (currentFilter === 'unread') {
+    filtered = allNotifs.filter(n => !n.isRead);
+  } else if (currentFilter === 'read') {
+    filtered = allNotifs.filter(n => n.isRead);
+  }
+
+  const list = el('notifications-list');
+  const empty = el('notif-empty');
+
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    list.parentElement.parentElement.classList.add('hidden');
+    empty.classList.remove('hidden');
+    el('notif-empty-desc').textContent = currentFilter === 'unread' 
+      ? 'No unread notifications at the moment.' 
+      : 'No notifications to display.';
+    return;
+  }
+
+  list.parentElement.parentElement.classList.remove('hidden');
+  empty.classList.add('hidden');
+
+  renderNotifications(filtered, list, (bId) => {
+    if (bId) {
+      window.location.href = `booking-details.html?id=${bId}`;
+    }
+  });
+
+  updateNotifBadge();
+}
+</script>
+</body>
+</html>

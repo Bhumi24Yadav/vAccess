@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking Details — vAccess</title>
+  <meta name="description" content="View detailed information about your venue booking." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <a href="student-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon">🏛️</div>
+      <div><div class="sidebar-brand-text">vAccess</div><div class="sidebar-brand-sub">Venue Booking</div></div>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <ul>
+        <li><a href="student-dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li><a href="booking.html"><span class="nav-icon">➕</span> New Booking</a></li>
+        <li><a href="venues.html"><span class="nav-icon">🏛️</span> Browse Venues</a></li>
+        <li><a href="my-bookings.html"><span class="nav-icon">📋</span> My Bookings</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li><a href="notifications.html"><span class="nav-icon">🔔</span> Notifications <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span></a></li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Loading...</div>
+          <div class="sidebar-user-role" id="sidebar-role">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="topbar-toggle" aria-label="Toggle sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <a href="my-bookings.html" style="color:var(--color-text-muted);">My Bookings</a>
+          <span>/</span><strong id="topbar-bid">Details</strong>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="notifications.html" class="topbar-btn" aria-label="Notifications">🔔<span class="badge-indicator" id="notif-badge-indicator" style="display:none;"></span></a>
+        <a href="profile.html" class="topbar-btn" aria-label="Profile">👤</a>
+      </div>
+    </header>
+
+    <main class="content-area" id="main-content">
+      <div id="booking-detail-content">
+        <div class="loading-state"><div class="spinner"></div><span>Loading booking details...</span></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay">
+  <div class="modal"><div class="modal-body">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title"></div>
+    <div class="confirm-message" id="confirm-message"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-outline" data-modal-close>Keep Booking</button>
+    <button class="btn btn-danger" id="confirm-ok-btn">Cancel Booking</button>
+  </div></div>
+</div>
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireUser();
+  const bId = getParam('id');
+  if (!bId) { renderError('No booking ID provided.'); return; }
+  el('topbar-bid').textContent = bId;
+  renderBookingDetail(bId);
+
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({ title:'Log Out', message:'Are you sure?', icon:'🚪', confirmText:'Log Out', confirmClass:'btn-primary', onConfirm:logout });
+  });
+});
+
+function renderBookingDetail(bId) {
+  const booking  = getBookingById(bId);
+  const container = el('booking-detail-content');
+
+  if (!booking) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <h3>Booking Not Found</h3>
+        <p>The booking <strong>${bId}</strong> does not exist.</p>
+        <a href="my-bookings.html" class="btn btn-primary" style="margin-top:var(--space-4);">Back to My Bookings</a>
+      </div>`;
+    return;
+  }
+
+  const venue    = getVenueById(booking.V_ID);
+  const slots    = getTimeslotsForBooking(bId);
+  const slot     = slots[0];
+  const approval = getApprovalForBooking(bId);
+  const requester = getRequesterInfo(booking);
+  const canCancel = booking.B_Status === 'Pending';
+
+  // Status color
+  const statusColors = {
+    Pending:   '#d97706', Approved: '#16a34a', Rejected: '#dc2626', Cancelled: '#6b7280'
+  };
+
+  // Build timeline
+  let timelineHTML = `
+    <div class="timeline-item done">
+      <div class="timeline-date">${formatDate(booking.B_Date)}</div>
+      <div class="timeline-label">Booking Submitted</div>
+      <div class="timeline-desc">Status set to Pending. Awaiting admin review.</div>
+    </div>
+    <div class="timeline-item ${booking.B_Status !== 'Pending' ? 'active' : ''}">
+      <div class="timeline-date">${approval ? formatDate(approval.Ap_Date) : 'Pending'}</div>
+      <div class="timeline-label">Under Review</div>
+      <div class="timeline-desc">Admin reviewing the booking request.</div>
+    </div>`;
+
+  if (booking.B_Status === 'Approved') {
+    timelineHTML += `
+      <div class="timeline-item done">
+        <div class="timeline-date">${approval ? formatDate(approval.Ap_Date) : '—'}</div>
+        <div class="timeline-label">✅ Approved</div>
+        <div class="timeline-desc">Booking approved by ${approval ? approval.A_Name : 'Admin'}.</div>
+      </div>`;
+  } else if (booking.B_Status === 'Rejected') {
+    timelineHTML += `
+      <div class="timeline-item rejected">
+        <div class="timeline-date">${approval ? formatDate(approval.Ap_Date) : '—'}</div>
+        <div class="timeline-label">❌ Rejected</div>
+        <div class="timeline-desc">Booking rejected by ${approval ? approval.A_Name : 'Admin'}.</div>
+      </div>`;
+  } else if (booking.B_Status === 'Cancelled') {
+    timelineHTML += `
+      <div class="timeline-item rejected">
+        <div class="timeline-date">—</div>
+        <div class="timeline-label">🚫 Cancelled</div>
+        <div class="timeline-desc">Booking cancelled by requester.</div>
+      </div>`;
+  }
+
+  container.innerHTML = `
+    <div style="max-width:900px;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6);flex-wrap:wrap;gap:var(--space-3);">
+        <div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);">
+            <h1 style="font-size:var(--font-size-2xl);font-weight:800;color:var(--color-gray-900);">${bId}</h1>
+            ${statusBadge(booking.B_Status)}
+          </div>
+          <p style="color:var(--color-text-muted);font-size:var(--font-size-sm);margin-top:var(--space-1);">Submitted on ${formatDate(booking.B_Date)}</p>
+        </div>
+        <div style="display:flex;gap:var(--space-2);">
+          <a href="my-bookings.html" class="btn btn-outline">← My Bookings</a>
+          ${canCancel ? `<button class="btn btn-danger-outline" id="cancel-btn" aria-label="Cancel this booking">Cancel Booking</button>` : ''}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:var(--space-6);">
+        <!-- Left column -->
+        <div style="display:flex;flex-direction:column;gap:var(--space-5);">
+
+          <!-- Venue Info -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">🏛️ Venue Information</div></div>
+            <div class="card-body">
+              ${venue ? `
+                <div style="display:flex;align-items:center;gap:var(--space-4);margin-bottom:var(--space-4);">
+                  <div style="width:56px;height:56px;border-radius:var(--radius-lg);background:var(--color-primary-100);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;">${getVenueIcon(venue.V_type)}</div>
+                  <div>
+                    <div style="font-weight:700;font-size:var(--font-size-lg);color:var(--color-gray-900);">${getVenueDisplayName(venue)}</div>
+                    <div style="font-size:var(--font-size-sm);color:var(--color-text-muted);">${venue.Category} · ${venue.V_ID}</div>
+                  </div>
+                </div>
+                <div class="info-grid">
+                  <div class="info-item"><div class="info-label">Venue ID</div><div class="info-value">${venue.V_ID}</div></div>
+                  <div class="info-item"><div class="info-label">Category</div><div class="info-value">${venue.Category}</div></div>
+                  <div class="info-item"><div class="info-label">Capacity</div><div class="info-value">👥 ${venue.Capacity}</div></div>
+                  <div class="info-item"><div class="info-label">Contact</div><div class="info-value">${venue.ContactNo}</div></div>
+                </div>
+              ` : '<p class="text-muted">Venue information not available.</p>'}
+            </div>
+          </div>
+
+          <!-- Booking Details -->
+          <div class="card">
+            <div class="card-header"><div class="card-title">📝 Booking Details</div></div>
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item"><div class="info-label">Booking ID</div><div class="info-value" style="font-weight:700;color:var(--color-primary);">${booking.B_ID}</div></div>
+                <div class="info-item"><div class="info-label">Booking Date</div><div class="info-value">${formatDate(booking.B_Date)}</div></div>
+                <div class="info-item"><div class="info-label">Event Date</div><div class="info-value">${slot ? formatDate(slot.EventDate) : '—'}</div></div>
+                <div class="info-item"><div class="info-label">Time Slot</div><div class="info-value">${slot ? `${formatTime(slot.StartTime)} – ${formatTime(slot.EndTime)}` : '—'}</div></div>
+                <div class="info-item"><div class="info-label">Purpose</div><div class="info-value">${booking.Purpose || booking.B_Purpose || '—'}</div></div>
+                <div class="info-item"><div class="info-label">No. of Members</div><div class="info-value">👥 ${booking.noOfMembers || booking.NoOfMembers || '—'}</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Requester -->
+          ${requester ? `
+          <div class="card">
+            <div class="card-header"><div class="card-title">👤 Requester</div></div>
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item"><div class="info-label">Name</div><div class="info-value">${requester.name}</div></div>
+                <div class="info-item"><div class="info-label">Email</div><div class="info-value">${requester.email}</div></div>
+                <div class="info-item"><div class="info-label">Department</div><div class="info-value">${requester.dept}</div></div>
+                <div class="info-item"><div class="info-label">Role</div><div class="info-value">${requester.role}</div></div>
+              </div>
+            </div>
+          </div>` : ''}
+
+          <!-- Approval Info -->
+          ${approval ? `
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">${approval.Decision === 'Approved' ? '✅' : '❌'} Admin Decision</div>
+              ${statusBadge(approval.Decision)}
+            </div>
+            <div class="card-body">
+              <div class="info-grid" style="margin-bottom:var(--space-4);">
+                <div class="info-item"><div class="info-label">Decision Date</div><div class="info-value">${formatDate(approval.Ap_Date)}</div></div>
+                <div class="info-item"><div class="info-label">Reviewed By</div><div class="info-value">${approval.A_Name}</div></div>
+                <div class="info-item"><div class="info-label">Admin Email</div><div class="info-value">${approval.A_Email}</div></div>
+                <div class="info-item"><div class="info-label">Approval ID</div><div class="info-value">${approval.Ap_ID}</div></div>
+              </div>
+              ${approval.Remark ? `
+              <div style="background:var(--color-gray-50);border-left:4px solid ${statusColors[approval.Decision] || 'var(--color-primary)'};border-radius:var(--radius-md);padding:var(--space-4);">
+                <div style="font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:var(--space-2);">Admin Feedback / Remark</div>
+                <div style="font-size:var(--font-size-sm);color:var(--color-gray-700);line-height:1.6;">"${approval.Remark}"</div>
+              </div>` : ''}
+            </div>
+          </div>` : `
+          ${booking.B_Status === 'Pending' ? `
+          <div class="alert alert-info">
+            <span class="alert-icon">⏳</span>
+            <div>Your booking is pending admin review. You'll receive a notification once a decision is made.</div>
+          </div>` : ''}`}
+        </div>
+
+        <!-- Right column: Timeline -->
+        <div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📊 Status Timeline</div></div>
+            <div class="card-body">
+              <div class="timeline">${timelineHTML}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Cancel handler
+  const cancelBtn = el('cancel-btn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      showConfirm({
+        title: 'Cancel Booking',
+        message: `Cancel booking ${bId}? This action cannot be undone.`,
+        icon: '⚠️',
+        confirmText: 'Cancel Booking',
+        confirmClass: 'btn-danger',
+        onConfirm: () => {
+          if (cancelBooking(bId)) {
+            showToast(`Booking ${bId} cancelled.`, 'success');
+            setTimeout(() => renderBookingDetail(bId), 500);
+          }
+        }
+      });
+    });
+  }
+}
+
+function renderError(msg) {
+  el('booking-detail-content').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-icon">⚠️</div>
+      <h3>Error</h3><p>${msg}</p>
+      <a href="my-bookings.html" class="btn btn-primary" style="margin-top:var(--space-4);">Back to My Bookings</a>
+    </div>`;
+}
+</script>
+</body>
+</html>
