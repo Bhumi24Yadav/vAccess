@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — vAccess</title>
+  <meta name="description" content="Create your vAccess account to start booking college venues." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <style>
+    body { background: var(--color-gray-50); display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: var(--space-6); }
+    .register-wrapper { width: 100%; max-width: 520px; background: white; border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); overflow: hidden; }
+    .register-header { background: linear-gradient(135deg, var(--color-primary-900), var(--color-primary-700)); padding: var(--space-8) var(--space-8) var(--space-6); color:white; }
+    .register-brand { display:flex;align-items:center;gap:var(--space-2);text-decoration:none;margin-bottom:var(--space-5); }
+    .register-brand-icon { width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center; }
+    .register-brand-name { font-family:var(--font-display);font-weight:800;font-size:var(--font-size-xl);color:white; }
+    .register-header h1 { font-size:var(--font-size-2xl);font-weight:800;color:white;margin-bottom:var(--space-1);font-family:var(--font-display); }
+    .register-header p { opacity:.75;font-size:var(--font-size-sm); }
+    .register-body { padding: var(--space-8); }
+    .role-toggle { display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);margin-bottom:var(--space-5); }
+    .role-tab { padding:var(--space-3);border:2px solid var(--color-gray-200);border-radius:var(--radius-md);text-align:center;cursor:pointer;transition:all var(--transition-fast);background:white; }
+    .role-tab.selected { border-color:var(--color-primary);background:var(--color-primary-50); }
+    .role-tab span { font-size:1.3rem;display:block;margin-bottom:4px; }
+    .role-tab small { font-size:var(--font-size-xs);font-weight:600;color:var(--color-gray-600); }
+    .role-tab.selected small { color:var(--color-primary); }
+    .form-row { display:flex;gap:var(--space-4); }
+    .form-row .form-group { flex:1; }
+    .error-msg { background:var(--color-danger-50);border:1px solid var(--color-danger-100);color:var(--color-danger-700);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);font-size:var(--font-size-sm);margin-bottom:var(--space-4);display:none; }
+    @media(max-width:480px){ .form-row { flex-direction:column; gap: var(--space-0); } }
+  </style>
+</head>
+<body>
+<div class="register-wrapper" role="main">
+  <!-- Header -->
+  <div class="register-header">
+    <a href="../index.html" class="register-brand">
+      <div class="register-brand-icon">🏛️</div>
+      <span class="register-brand-name">vAccess</span>
+    </a>
+    <h1>Create Account</h1>
+    <p>Register to start booking college venues.</p>
+  </div>
+
+  <!-- Form -->
+  <div class="register-body">
+    <!-- Role selection -->
+    <div class="form-group">
+      <label class="form-label">Register as <span class="required">*</span></label>
+      <div class="role-toggle" id="reg-role-toggle" role="radiogroup">
+        <label class="role-tab selected" for="reg-role-student">
+          <input type="radio" name="reg-role" id="reg-role-student" value="student" checked style="display:none;" />
+          <span>🎓</span><small>Student</small>
+        </label>
+        <label class="role-tab" for="reg-role-faculty">
+          <input type="radio" name="reg-role" id="reg-role-faculty" value="faculty" style="display:none;" />
+          <span>👨‍🏫</span><small>Faculty</small>
+        </label>
+      </div>
+    </div>
+
+    <div class="error-msg" id="reg-error" role="alert"></div>
+
+    <form id="register-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="reg-name">Full Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="reg-name" name="name"
+          placeholder="e.g. Aarav Mehta" autocomplete="name" required />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Email Address <span class="required">*</span></label>
+          <input type="email" class="form-control" id="reg-email" name="email"
+            placeholder="you@college.edu" autocomplete="email" required />
+        </div>
+        <div class="form-group" id="contact-field-group">
+          <label class="form-label" for="reg-contact">Contact No.</label>
+          <input type="tel" class="form-control" id="reg-contact" name="contact"
+            placeholder="10-digit mobile" autocomplete="tel" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-dept">Department <span class="required">*</span></label>
+        <select class="form-control" id="reg-dept" name="dept" required>
+          <option value="">Select Department</option>
+          <option>Computer Science</option>
+          <option>Information Technology</option>
+          <option>Electronics</option>
+          <option>Mechanical</option>
+          <option>Civil</option>
+          <option>Electrical</option>
+          <option>Chemical</option>
+          <option>Mathematics</option>
+          <option>Physics</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="reg-password">Password <span class="required">*</span></label>
+        <input type="password" class="form-control" id="reg-password" name="password"
+          placeholder="Create a password" autocomplete="new-password" required />
+        <div class="form-hint" id="password-hint">Demo: use "student123" or "faculty123" for quick testing.</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="reg-submit-btn">
+        Create Account →
+      </button>
+    </form>
+
+    <p style="text-align:center;margin-top:var(--space-5);font-size:var(--font-size-sm);color:var(--color-text-muted);">
+      Already have an account? <a href="login.html" style="font-weight:600;">Log In</a>
+    </p>
+    <p style="text-align:center;margin-top:var(--space-2);">
+      <a href="../index.html" style="font-size:var(--font-size-sm);color:var(--color-text-muted);">← Back to Home</a>
+    </p>
+
+    <div style="margin-top:var(--space-6);padding:var(--space-3);background:var(--color-gray-50);border-radius:var(--radius-md);font-size:var(--font-size-xs);color:var(--color-text-muted);text-align:center;">
+      ⚠️ This is a demo application. No real authentication or data storage is implemented.
+    </div>
+  </div>
+</div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const session = getSession();
+  if (session) {
+    window.location.href = session.role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html';
+    return;
+  }
+
+  // Role tabs
+  document.querySelectorAll('.role-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('selected'));
+      tab.classList.add('selected');
+      // Hide contact field for faculty
+      const role = tab.querySelector('input').value;
+      const contactGroup = el('contact-field-group');
+      if (contactGroup) contactGroup.style.display = role === 'faculty' ? 'none' : 'block';
+      const hint = el('password-hint');
+      if (hint) hint.textContent = `Demo: use "${role}123" for quick testing.`;
+    });
+  });
+
+  // Form submit
+  el('register-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name      = el('reg-name').value.trim();
+    const email     = el('reg-email').value.trim();
+    const contactNo = el('reg-contact').value.trim();
+    const dept      = el('reg-dept').value;
+    const password  = el('reg-password').value;
+    const role      = document.querySelector('input[name="reg-role"]:checked')?.value;
+
+    if (!name || !email || !dept || !password || !role) {
+      showRegError('Please fill in all required fields.');
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      showRegError('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      showRegError('Password must be at least 6 characters.');
+      return;
+    }
+
+    const btn = el('reg-submit-btn');
+    btn.textContent = 'Creating account...';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      const result = mockRegister({ name, email, contactNo, dept, role, password });
+      if (result.success) {
+        window.location.href = 'student-dashboard.html';
+      } else {
+        showRegError(result.error);
+        btn.textContent = 'Create Account →';
+        btn.disabled = false;
+      }
+    }, 600);
+  });
+
+  function showRegError(msg) {
+    const errEl = el('reg-error');
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>

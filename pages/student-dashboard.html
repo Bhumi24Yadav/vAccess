@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — vAccess</title>
+  <meta name="description" content="Student and faculty dashboard for venue booking management." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Main Navigation">
+    <a href="student-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon">🏛️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub">Venue Booking</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Main</div>
+      <ul>
+        <li><a href="student-dashboard.html" class="active"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li><a href="booking.html"><span class="nav-icon">➕</span> New Booking</a></li>
+        <li><a href="venues.html"><span class="nav-icon">🏛️</span> Browse Venues</a></li>
+        <li><a href="my-bookings.html"><span class="nav-icon">📋</span> My Bookings</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Loading...</div>
+          <div class="sidebar-user-role" id="sidebar-role">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="topbar-toggle" aria-label="Toggle sidebar" aria-expanded="false">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>vAccess</span>
+          <span>/</span>
+          <strong>Dashboard</strong>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="notifications.html" class="topbar-btn" id="topbar-notif-btn" aria-label="Notifications">
+          🔔
+          <span class="badge-indicator" id="notif-badge-indicator" style="display:none;"></span>
+        </a>
+        <a href="profile.html" class="topbar-btn" aria-label="Profile">👤</a>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="content-area" id="main-content">
+      <!-- Welcome Banner -->
+      <div class="welcome-banner" id="welcome-banner">
+        <div class="welcome-banner-content">
+          <div class="welcome-greeting">Good day! 👋</div>
+          <div class="welcome-name" id="welcome-name">Loading...</div>
+          <div class="welcome-meta">
+            <span class="welcome-meta-item">🎓 <span id="welcome-dept">—</span></span>
+            <span class="welcome-meta-item">📧 <span id="welcome-email">—</span></span>
+          </div>
+          <div class="welcome-actions">
+            <a href="booking.html" class="btn btn-lg" style="background:white;color:var(--color-primary-700);font-weight:700;" id="dashboard-new-booking-btn">
+              ➕ New Booking
+            </a>
+            <a href="venues.html" class="btn btn-lg" style="background:rgba(255,255,255,0.15);color:white;border:1.5px solid rgba(255,255,255,0.3);">
+              🏛️ Browse Venues
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid" id="stats-grid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Left: Recent Bookings -->
+        <div class="dashboard-main">
+          <!-- Quick Actions -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⚡ Quick Actions</div>
+            </div>
+            <div class="card-body">
+              <div class="quick-actions">
+                <a href="booking.html" class="quick-action-btn" id="qa-new-booking">
+                  <span class="quick-action-icon">📝</span>
+                  <span class="quick-action-label">New Booking</span>
+                </a>
+                <a href="venues.html" class="quick-action-btn" id="qa-venues">
+                  <span class="quick-action-icon">🏛️</span>
+                  <span class="quick-action-label">Browse Venues</span>
+                </a>
+                <a href="my-bookings.html" class="quick-action-btn" id="qa-my-bookings">
+                  <span class="quick-action-icon">📋</span>
+                  <span class="quick-action-label">My Bookings</span>
+                </a>
+                <a href="notifications.html" class="quick-action-btn" id="qa-notifications">
+                  <span class="quick-action-icon">🔔</span>
+                  <span class="quick-action-label">Notifications</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Bookings -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📋 Recent Bookings</div>
+              <a href="my-bookings.html" class="btn btn-sm btn-secondary">View All</a>
+            </div>
+            <div id="recent-bookings-container">
+              <div class="loading-state"><div class="spinner"></div><span>Loading bookings...</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Aside -->
+        <div class="dashboard-aside">
+          <!-- Upcoming Bookings -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📅 Upcoming</div>
+              <a href="my-bookings.html" class="btn btn-sm btn-ghost">See all</a>
+            </div>
+            <div id="upcoming-container">
+              <div class="loading-state"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- Recent Notifications -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🔔 Notifications</div>
+              <a href="notifications.html" class="btn btn-sm btn-ghost">See all</a>
+            </div>
+            <div id="notif-preview-container" class="notif-list"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireUser();
+  const session = getSession();
+
+  // Populate welcome banner
+  el('welcome-name').textContent   = `Hello, ${session.name.split(' ')[0]}!`;
+  el('welcome-dept').textContent   = session.dept || '—';
+  el('welcome-email').textContent  = session.email;
+
+  // Sidebar user
+  el('sidebar-name').textContent   = session.name;
+  el('sidebar-role').textContent   = session.role.charAt(0).toUpperCase() + session.role.slice(1);
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  // Stats
+  renderStats();
+
+  // Recent bookings
+  renderRecentBookings();
+
+  // Upcoming
+  renderUpcoming();
+
+  // Notifications preview
+  renderNotifPreview();
+
+  // Update notification badge
+  updateNotifBadge();
+
+  // Logout
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Are you sure you want to log out?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+
+function renderStats() {
+  const stats = getMyBookingStats();
+  const grid = el('stats-grid');
+  grid.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon blue">📋</div>
+      <div class="stat-info">
+        <div class="stat-value">${stats.total}</div>
+        <div class="stat-label">Total Bookings</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon yellow">⏳</div>
+      <div class="stat-info">
+        <div class="stat-value">${stats.pending}</div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">✅</div>
+      <div class="stat-info">
+        <div class="stat-value">${stats.approved}</div>
+        <div class="stat-label">Approved</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">❌</div>
+      <div class="stat-info">
+        <div class="stat-value">${stats.rejected}</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRecentBookings() {
+  const container = el('recent-bookings-container');
+  const bookings  = getMyBookings().slice(0, 5);
+
+  if (bookings.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h3>No bookings yet</h3>
+        <p>You haven't made any bookings yet. <a href="booking.html">Book a venue</a> to get started.</p>
+      </div>`;
+    return;
+  }
+
+  const rows = bookings.map(b => {
+    const venue  = getVenueById(b.V_ID);
+    const slots  = getTimeslotsForBooking(b.B_ID);
+    const slot   = slots[0];
+    return `
+      <tr>
+        <td><span class="font-semibold" style="color:var(--color-primary);">${b.B_ID}</span></td>
+        <td>${venue ? getVenueDisplayName(venue) : '—'}</td>
+        <td>${slot ? formatDate(slot.EventDate) : formatDate(b.B_Date)}</td>
+        <td>${slot ? `${formatTime(slot.StartTime)} – ${formatTime(slot.EndTime)}` : '—'}</td>
+        <td>${statusBadge(b.B_Status)}</td>
+        <td>
+          <a href="booking-details.html?id=${b.B_ID}" class="btn btn-sm btn-secondary" aria-label="View booking ${b.B_ID}">View</a>
+        </td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Booking ID</th><th>Venue</th><th>Event Date</th><th>Time</th><th>Status</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderUpcoming() {
+  const container = el('upcoming-container');
+  const upcoming  = getUpcomingBookings(3);
+
+  if (upcoming.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding:var(--space-8);">
+        <div class="empty-state-icon">📅</div>
+        <p>No upcoming bookings.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = upcoming.map(b => {
+    const venue = getVenueById(b.V_ID);
+    const slots = getTimeslotsForBooking(b.B_ID);
+    const slot  = slots[0];
+    const d     = slot ? new Date(slot.EventDate + 'T00:00:00') : null;
+    return `
+      <div class="upcoming-booking-item">
+        <div class="upcoming-date-badge">
+          <div class="upcoming-date-day">${d ? d.getDate() : '?'}</div>
+          <div class="upcoming-date-month">${d ? d.toLocaleString('en', { month: 'short' }) : ''}</div>
+        </div>
+        <div class="upcoming-info">
+          <div class="upcoming-venue">${venue ? getVenueDisplayName(venue) : '—'}</div>
+          <div class="upcoming-time">${slot ? `${formatTime(slot.StartTime)} – ${formatTime(slot.EndTime)}` : '—'}</div>
+        </div>
+        ${statusBadge(b.B_Status)}
+      </div>`;
+  }).join('');
+}
+
+function renderNotifPreview() {
+  const container = el('notif-preview-container');
+  const notifs    = getMyNotifications().slice(0, 4);
+  renderNotifications(notifs, container, (bid) => {
+    if (bid) window.location.href = `booking-details.html?id=${bid}`;
+  });
+}
+</script>
+</body>
+</html>

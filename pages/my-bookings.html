@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Bookings — vAccess</title>
+  <meta name="description" content="View and manage all your venue bookings." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <a href="student-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon">🏛️</div>
+      <div><div class="sidebar-brand-text">vAccess</div><div class="sidebar-brand-sub">Venue Booking</div></div>
+    </a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <ul>
+        <li><a href="student-dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a></li>
+        <li><a href="booking.html"><span class="nav-icon">➕</span> New Booking</a></li>
+        <li><a href="venues.html"><span class="nav-icon">🏛️</span> Browse Venues</a></li>
+        <li><a href="my-bookings.html" class="active"><span class="nav-icon">📋</span> My Bookings</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li><a href="notifications.html"><span class="nav-icon">🔔</span> Notifications <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span></a></li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Loading...</div>
+          <div class="sidebar-user-role" id="sidebar-role">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="topbar-toggle" aria-label="Toggle sidebar">☰</button>
+        <div class="topbar-breadcrumb"><span>vAccess</span><span>/</span><strong>My Bookings</strong></div>
+      </div>
+      <div class="topbar-right">
+        <a href="notifications.html" class="topbar-btn" aria-label="Notifications">🔔<span class="badge-indicator" id="notif-badge-indicator" style="display:none;"></span></a>
+        <a href="profile.html" class="topbar-btn" aria-label="Profile">👤</a>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-3);">
+        <div>
+          <h1 class="page-title">📋 My Bookings</h1>
+          <p class="page-subtitle">All your venue booking requests and their current status.</p>
+        </div>
+        <a href="booking.html" class="btn btn-primary">➕ New Booking</a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" style="margin-bottom:var(--space-6);" id="booking-stats"></div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <div class="form-group">
+          <label class="form-label" for="mb-search">Search</label>
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="form-control" id="mb-search" placeholder="Search by ID, venue, purpose..." aria-label="Search bookings" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="mb-status">Status</label>
+          <select class="form-control" id="mb-status" aria-label="Filter by status">
+            <option value="">All Statuses</option>
+            <option>Pending</option>
+            <option>Approved</option>
+            <option>Rejected</option>
+            <option>Cancelled</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-outline" id="mb-clear-btn">Clear</button>
+        </div>
+      </div>
+
+      <!-- Result count -->
+      <div style="margin-bottom:var(--space-3);font-size:var(--font-size-sm);color:var(--color-text-muted);">
+        Showing <strong id="mb-count">0</strong> bookings
+      </div>
+
+      <!-- Desktop table -->
+      <div class="table-wrapper hide-on-mobile" id="mb-table-wrapper">
+        <div class="table-scroll">
+          <table aria-label="My bookings">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Venue</th>
+                <th>Event Date</th>
+                <th>Time</th>
+                <th>Purpose</th>
+                <th>Members</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="mb-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Mobile cards -->
+      <div id="mb-mobile-cards"></div>
+
+      <!-- Empty state -->
+      <div class="empty-state hidden" id="mb-empty">
+        <div class="empty-state-icon">📋</div>
+        <h3>No bookings found</h3>
+        <p>No bookings match your current filter, or you haven't made any bookings yet.</p>
+        <a href="booking.html" class="btn btn-primary" style="margin-top:var(--space-4);">Make Your First Booking</a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay">
+  <div class="modal"><div class="modal-body">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title"></div>
+    <div class="confirm-message" id="confirm-message"></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-outline" data-modal-close>Keep Booking</button>
+    <button class="btn btn-danger" id="confirm-ok-btn">Cancel Booking</button>
+  </div></div>
+</div>
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireUser();
+  renderStats();
+  renderBookings();
+
+  el('mb-search').addEventListener('input', debounce(renderBookings, 250));
+  el('mb-status').addEventListener('change', renderBookings);
+  el('mb-clear-btn').addEventListener('click', () => {
+    el('mb-search').value = '';
+    el('mb-status').value = '';
+    renderBookings();
+  });
+
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({ title:'Log Out', message:'Are you sure you want to log out?', icon:'🚪', confirmText:'Log Out', confirmClass:'btn-primary', onConfirm:logout });
+  });
+});
+
+function renderStats() {
+  const stats = getMyBookingStats();
+  el('booking-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon blue">📋</div><div class="stat-info"><div class="stat-value">${stats.total}</div><div class="stat-label">Total</div></div></div>
+    <div class="stat-card"><div class="stat-icon yellow">⏳</div><div class="stat-info"><div class="stat-value">${stats.pending}</div><div class="stat-label">Pending</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-value">${stats.approved}</div><div class="stat-label">Approved</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">❌</div><div class="stat-info"><div class="stat-value">${stats.rejected}</div><div class="stat-label">Rejected</div></div></div>
+  `;
+}
+
+function renderBookings() {
+  const search = el('mb-search').value;
+  const status = el('mb-status').value;
+  let bookings = getMyBookings();
+
+  if (search) {
+    const t = search.toLowerCase();
+    bookings = bookings.filter(b => {
+      const venue = getVenueById(b.V_ID);
+      return b.B_ID.toLowerCase().includes(t) ||
+        b.Purpose.toLowerCase().includes(t) ||
+        (venue && getVenueDisplayName(venue).toLowerCase().includes(t));
+    });
+  }
+  if (status) bookings = bookings.filter(b => b.B_Status === status);
+
+  el('mb-count').textContent = bookings.length;
+  const emptyEl = el('mb-empty');
+
+  if (bookings.length === 0) {
+    el('mb-tbody').innerHTML = '';
+    el('mb-mobile-cards').innerHTML = '';
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+  emptyEl.classList.add('hidden');
+
+  // Desktop table
+  el('mb-tbody').innerHTML = bookings.map(b => {
+    const venue = getVenueById(b.V_ID);
+    const slots = getTimeslotsForBooking(b.B_ID);
+    const slot  = slots[0];
+    const canCancel = b.B_Status === 'Pending';
+    return `
+      <tr>
+        <td><a href="booking-details.html?id=${b.B_ID}" style="font-weight:700;color:var(--color-primary);">${b.B_ID}</a></td>
+        <td>${venue ? getVenueDisplayName(venue) : '—'}</td>
+        <td>${slot ? formatDate(slot.EventDate) : '—'}</td>
+        <td>${slot ? `${formatTime(slot.StartTime)} – ${formatTime(slot.EndTime)}` : '—'}</td>
+        <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${b.Purpose}">${b.Purpose}</td>
+        <td>👥 ${b.noOfMembers}</td>
+        <td>${statusBadge(b.B_Status)}</td>
+        <td>
+          <div class="table-actions">
+            <a href="booking-details.html?id=${b.B_ID}" class="btn btn-sm btn-secondary" aria-label="View ${b.B_ID}">View</a>
+            ${canCancel ? `<button class="btn btn-sm btn-danger-outline" onclick="handleCancel('${b.B_ID}')" aria-label="Cancel ${b.B_ID}">Cancel</button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  // Mobile cards
+  el('mb-mobile-cards').innerHTML = bookings.map(b => {
+    const venue = getVenueById(b.V_ID);
+    const slots = getTimeslotsForBooking(b.B_ID);
+    const slot  = slots[0];
+    const canCancel = b.B_Status === 'Pending';
+    return `
+      <div class="booking-card">
+        <div class="booking-card-header">
+          <div>
+            <div class="booking-card-id">${b.B_ID}</div>
+            <div class="booking-card-venue">${venue ? getVenueDisplayName(venue) : '—'}</div>
+          </div>
+          ${statusBadge(b.B_Status)}
+        </div>
+        <div class="booking-card-meta">
+          <span>📅 ${slot ? formatDate(slot.EventDate) : '—'}</span>
+          <span>🕐 ${slot ? `${formatTime(slot.StartTime)} – ${formatTime(slot.EndTime)}` : '—'}</span>
+          <span>👥 ${b.noOfMembers}</span>
+        </div>
+        <div style="font-size:var(--font-size-xs);color:var(--color-text-muted);">📌 ${b.Purpose}</div>
+        <div class="booking-card-actions">
+          <a href="booking-details.html?id=${b.B_ID}" class="btn btn-sm btn-secondary" style="flex:1;justify-content:center;">View Details</a>
+          ${canCancel ? `<button class="btn btn-sm btn-danger-outline" onclick="handleCancel('${b.B_ID}')" style="flex:1;justify-content:center;">Cancel</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function handleCancel(bId) {
+  showConfirm({
+    title: 'Cancel Booking',
+    message: `Are you sure you want to cancel booking ${bId}? This action cannot be undone.`,
+    icon: '⚠️',
+    confirmText: 'Cancel Booking',
+    confirmClass: 'btn-danger',
+    onConfirm: () => {
+      if (cancelBooking(bId)) {
+        showToast(`Booking ${bId} has been cancelled.`, 'success');
+        renderStats();
+        renderBookings();
+      } else {
+        showToast('Unable to cancel this booking.', 'error');
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>

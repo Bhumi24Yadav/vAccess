@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Venue Directory & Management — vAccess</title>
+  <meta name="description" content="College administrative panel to manage campus venues, facilities, and maintenance status." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Admin Navigation">
+    <a href="admin-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon" style="background:var(--color-navy-dark,#0a192f);">🛡️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub" style="color:var(--color-warning);">Admin Portal</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Administration</div>
+      <ul>
+        <li><a href="admin-dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+        <li>
+          <a href="admin-bookings.html?status=Pending">
+            <span class="nav-icon">⏳</span> Pending Approvals
+            <span class="badge badge-warning" id="sidebar-pending-badge" style="margin-left:auto;font-size:0.75rem;display:none;">0</span>
+          </a>
+        </li>
+        <li><a href="admin-bookings.html"><span class="nav-icon">📋</span> All Bookings</a></li>
+        <li><a href="admin-venues.html" class="active"><span class="nav-icon">🏛️</span> Venues</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Admin</div>
+          <div class="sidebar-user-role" id="sidebar-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Admin</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Venues</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm btn-primary" onclick="openAddVenueModal()">
+          <span>➕</span> <span class="topbar-btn-text">Add New Venue</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Campus Venues & Facilities</h1>
+          <p class="page-subtitle">Configure venue availability, capacities, and maintenance schedules</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddVenueModal()">
+          <span>➕</span> Add New Venue
+        </button>
+      </div>
+
+      <!-- Stats Overview -->
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--space-5);">
+        <div class="stat-card">
+          <div class="stat-icon blue">🏛️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="count-total-venues">0</div>
+            <div class="stat-label">Total Venues</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✓</div>
+          <div class="stat-info">
+            <div class="stat-value" id="count-available-venues">0</div>
+            <div class="stat-label">Available for Booking</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">📅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="count-booked-venues">0</div>
+            <div class="stat-label">Currently Booked</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">🔧</div>
+          <div class="stat-info">
+            <div class="stat-value" id="count-maintenance-venues">0</div>
+            <div class="stat-label">Under Maintenance</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Bar -->
+      <div class="card" style="margin-bottom:var(--space-5);">
+        <div class="card-body" style="padding:var(--space-4);">
+          <div class="filter-bar" style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;">
+            <div class="form-group" style="flex:2;min-width:200px;margin-bottom:0;">
+              <label class="form-label" for="search-venues" style="font-size:var(--font-size-xs);">Search</label>
+              <input type="text" id="search-venues" class="form-control" placeholder="Search venue name, location, ID..." />
+            </div>
+
+            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+              <label class="form-label" for="filter-status" style="font-size:var(--font-size-xs);">Status</label>
+              <select id="filter-status" class="form-control">
+                <option value="all">All Statuses</option>
+                <option value="Available">Available</option>
+                <option value="Booked">Booked</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+              <label class="form-label" for="filter-category" style="font-size:var(--font-size-xs);">Category</label>
+              <select id="filter-category" class="form-control">
+                <option value="all">All Categories</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+              <label class="form-label" for="filter-type" style="font-size:var(--font-size-xs);">Type</label>
+              <select id="filter-type" class="form-control">
+                <option value="all">All Types</option>
+              </select>
+            </div>
+
+            <div class="filter-actions" style="margin-bottom:0;">
+              <button class="btn btn-outline" id="btn-reset-venue-filters">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result count -->
+      <div style="margin-bottom:var(--space-3);font-size:var(--font-size-sm);color:var(--color-text-muted);">
+        Showing <strong id="admin-venues-count">0</strong> venues
+      </div>
+
+      <!-- Venues Table -->
+      <div class="table-wrapper hide-on-mobile" id="venues-table-wrapper">
+        <div class="table-scroll">
+          <table aria-label="Campus venues table">
+            <thead>
+              <tr>
+                <th>Venue ID</th>
+                <th>Name / Type</th>
+                <th>Location / SubType</th>
+                <th>Category</th>
+                <th>Capacity</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="venues-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div id="venues-mobile-cards" class="show-on-mobile" style="display:none;flex-direction:column;gap:var(--space-3);"></div>
+
+      <!-- Empty State -->
+      <div class="empty-state hidden" id="venues-empty">
+        <div class="empty-state-icon">🏛️</div>
+        <h3>No venues found</h3>
+        <p>No venues match your current search filters.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Add / Edit Venue -->
+<div class="modal-overlay" id="venue-modal" role="dialog" aria-modal="true" aria-labelledby="venue-modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="venue-modal-title">Add New Campus Venue</h2>
+      <button class="modal-close" data-modal-close aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="venue-form">
+        <input type="hidden" id="v-edit-id" />
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="v-type">Venue Type / Main Name <span class="required">*</span></label>
+            <input type="text" id="v-type" class="form-control" placeholder="e.g., Auditorium, Seminar Hall" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="v-sub">Location / SubType <span class="required">*</span></label>
+            <input type="text" id="v-sub" class="form-control" placeholder="e.g., Main Hall, Block C 2nd Floor" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="v-cat">Category <span class="required">*</span></label>
+            <select id="v-cat" class="form-control" required>
+              <option value="Large Events">Large Events</option>
+              <option value="Academic">Academic</option>
+              <option value="Meeting">Meeting</option>
+              <option value="Outdoor / Sports">Outdoor / Sports</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="v-cap">Seating Capacity <span class="required">*</span></label>
+            <input type="number" id="v-cap" class="form-control" min="1" placeholder="e.g., 150" required />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="v-status">Status <span class="required">*</span></label>
+            <select id="v-status" class="form-control" required>
+              <option value="Available">Available</option>
+              <option value="Booked">Booked</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="v-contact">Helpline / Contact Phone</label>
+            <input type="text" id="v-contact" class="form-control" placeholder="022-2456-7890" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-primary" id="btn-save-venue">Save Venue</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireAdmin();
+  const session = getSession();
+
+  // Sidebar user info
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = 'Administrator';
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  // Populate dynamic dropdown filters
+  populateFilters();
+
+  // Bind filter events
+  el('search-venues').addEventListener('input', debounce(applyVenueFilters, 250));
+  el('filter-status').addEventListener('change', applyVenueFilters);
+  el('filter-category').addEventListener('change', applyVenueFilters);
+  el('filter-type').addEventListener('change', applyVenueFilters);
+  el('btn-reset-venue-filters').addEventListener('click', resetVenueFilters);
+
+  // Modal save button
+  el('btn-save-venue').addEventListener('click', handleSaveVenue);
+
+  // Initial load
+  updateVenueStats();
+  applyVenueFilters();
+
+  // Pending badge
+  const pendingCount = getBookings().filter(b => b.B_Status === 'Pending').length;
+  if (pendingCount > 0) {
+    const badge = el('sidebar-pending-badge');
+    badge.textContent = pendingCount;
+    badge.style.display = 'inline-block';
+  }
+
+  // Logout listener
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Are you sure you want to sign out?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+
+function updateVenueStats() {
+  const venues = getVenues();
+  el('count-total-venues').textContent = venues.length;
+  el('count-available-venues').textContent = venues.filter(v => v.V_Status === 'Available').length;
+  el('count-booked-venues').textContent = venues.filter(v => v.V_Status === 'Booked').length;
+  el('count-maintenance-venues').textContent = venues.filter(v => v.V_Status === 'Maintenance').length;
+}
+
+function populateFilters() {
+  const venues = getVenues();
+  const categories = [...new Set(venues.map(v => v.Category).filter(Boolean))];
+  const types = [...new Set(venues.map(v => v.V_type).filter(Boolean))];
+
+  const catSelect = el('filter-category');
+  categories.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    catSelect.appendChild(opt);
+  });
+
+  const typeSelect = el('filter-type');
+  types.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    typeSelect.appendChild(opt);
+  });
+}
+
+function resetVenueFilters() {
+  el('search-venues').value = '';
+  el('filter-status').value = 'all';
+  el('filter-category').value = 'all';
+  el('filter-type').value = 'all';
+  applyVenueFilters();
+}
+
+function applyVenueFilters() {
+  const search = el('search-venues').value.trim().toLowerCase();
+  const status = el('filter-status').value;
+  const category = el('filter-category').value;
+  const type = el('filter-type').value;
+
+  let venues = getVenues();
+
+  if (search) {
+    venues = venues.filter(v => 
+      v.V_ID.toLowerCase().includes(search) ||
+      (v.V_type && v.V_type.toLowerCase().includes(search)) ||
+      (v.SubType && v.SubType.toLowerCase().includes(search)) ||
+      (v.Category && v.Category.toLowerCase().includes(search))
+    );
+  }
+
+  if (status !== 'all') {
+    venues = venues.filter(v => v.V_Status === status);
+  }
+
+  if (category !== 'all') {
+    venues = venues.filter(v => v.Category === category);
+  }
+
+  if (type !== 'all') {
+    venues = venues.filter(v => v.V_type === type);
+  }
+
+  el('admin-venues-count').textContent = venues.length;
+  renderVenuesTable(venues);
+}
+
+function renderVenuesTable(venues) {
+  const tbody = el('venues-tbody');
+  const cards = el('venues-mobile-cards');
+  const empty = el('venues-empty');
+  const wrapper = el('venues-table-wrapper');
+
+  if (venues.length === 0) {
+    wrapper.classList.add('hidden');
+    cards.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  wrapper.classList.remove('hidden');
+  empty.classList.add('hidden');
+
+  tbody.innerHTML = venues.map(v => {
+    return `
+      <tr>
+        <td><strong>${v.V_ID}</strong></td>
+        <td>
+          <div style="font-weight:600;">${escapeHtml(v.V_type)}</div>
+        </td>
+        <td>${escapeHtml(v.SubType)}</td>
+        <td><span class="badge badge-secondary">${escapeHtml(v.Category)}</span></td>
+        <td><strong>${v.Capacity}</strong> seats</td>
+        <td>${escapeHtml(v.ContactNo || '—')}</td>
+        <td>${venueStatusBadge(v.V_Status)}</td>
+        <td>
+          <div style="display:flex;gap:var(--space-2);">
+            <button class="btn btn-sm btn-outline" onclick="openEditVenueModal('${v.V_ID}')" title="Edit Venue">Edit</button>
+            <button class="btn btn-sm ${v.V_Status === 'Maintenance' ? 'btn-success' : 'btn-outline'}" onclick="toggleMaintenance('${v.V_ID}')" title="Toggle Maintenance">
+              ${v.V_Status === 'Maintenance' ? 'Set Active' : 'Maintenance'}
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  cards.innerHTML = venues.map(v => {
+    return `
+      <div class="card" style="padding:var(--space-4);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-2);">
+          <div>
+            <div style="font-weight:700;font-size:var(--font-size-md);">${escapeHtml(v.V_type)}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--color-text-muted);">${v.V_ID} • ${escapeHtml(v.SubType)}</div>
+          </div>
+          ${venueStatusBadge(v.V_Status)}
+        </div>
+        <div style="display:flex;gap:var(--space-4);font-size:var(--font-size-sm);color:var(--color-gray-600);margin-bottom:var(--space-3);">
+          <span>👥 ${v.Capacity} seats</span>
+          <span>📁 ${escapeHtml(v.Category)}</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:var(--space-2);">
+          <button class="btn btn-sm btn-outline" onclick="openEditVenueModal('${v.V_ID}')">Edit</button>
+          <button class="btn btn-sm ${v.V_Status === 'Maintenance' ? 'btn-success' : 'btn-outline'}" onclick="toggleMaintenance('${v.V_ID}')">
+            ${v.V_Status === 'Maintenance' ? 'Set Active' : 'Maintenance'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openAddVenueModal() {
+  el('venue-modal-title').textContent = 'Add New Campus Venue';
+  el('v-edit-id').value = '';
+  el('venue-form').reset();
+  el('v-status').value = 'Available';
+  openModal('venue-modal');
+}
+
+function openEditVenueModal(vId) {
+  const v = getVenueById(vId);
+  if (!v) return;
+
+  el('venue-modal-title').textContent = `Edit Venue (${v.V_ID})`;
+  el('v-edit-id').value = v.V_ID;
+  el('v-type').value = v.V_type;
+  el('v-sub').value = v.SubType;
+  el('v-cat').value = v.Category;
+  el('v-cap').value = v.Capacity;
+  el('v-status').value = v.V_Status;
+  el('v-contact').value = v.ContactNo || '';
+
+  openModal('venue-modal');
+}
+
+function handleSaveVenue() {
+  const editId = el('v-edit-id').value;
+  const vType = el('v-type').value.trim();
+  const vSub = el('v-sub').value.trim();
+  const vCat = el('v-cat').value;
+  const vCap = parseInt(el('v-cap').value, 10);
+  const vStatus = el('v-status').value;
+  const vContact = el('v-contact').value.trim();
+
+  if (!vType || !vSub || isNaN(vCap) || vCap <= 0) {
+    toast.error('Please complete all required fields with valid values');
+    return;
+  }
+
+  let venues = getVenues();
+
+  if (editId) {
+    // Update existing
+    const idx = venues.findIndex(v => v.V_ID === editId);
+    if (idx !== -1) {
+      venues[idx] = {
+        ...venues[idx],
+        V_type: vType,
+        SubType: vSub,
+        Category: vCat,
+        Capacity: vCap,
+        V_Status: vStatus,
+        ContactNo: vContact
+      };
+      localStorage.setItem('va_venues', JSON.stringify(venues));
+      toast.success(`Venue ${editId} updated successfully`);
+    }
+  } else {
+    // Add new
+    const nextNum = venues.length + 1;
+    const newId = `V${String(nextNum).padStart(3, '0')}`;
+    const newVenue = {
+      V_ID: newId,
+      V_type: vType,
+      SubType: vSub,
+      Category: vCat,
+      Capacity: vCap,
+      V_Status: vStatus,
+      ContactNo: vContact
+    };
+    venues.push(newVenue);
+    localStorage.setItem('va_venues', JSON.stringify(venues));
+    toast.success(`Venue ${newId} created successfully`);
+  }
+
+  closeModal('venue-modal');
+  updateVenueStats();
+  applyVenueFilters();
+}
+
+function toggleMaintenance(vId) {
+  const venues = getVenues();
+  const v = venues.find(x => x.V_ID === vId);
+  if (!v) return;
+
+  const newStatus = v.V_Status === 'Maintenance' ? 'Available' : 'Maintenance';
+  v.V_Status = newStatus;
+  localStorage.setItem('va_venues', JSON.stringify(venues));
+
+  toast.info(`${v.V_type} status changed to ${newStatus}`);
+  updateVenueStats();
+  applyVenueFilters();
+}
+</script>
+</body>
+</html>

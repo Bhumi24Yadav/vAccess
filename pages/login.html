@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — vAccess</title>
+  <meta name="description" content="Log in to vAccess to book college venues and manage your bookings." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <style>
+    body { background: var(--color-gray-50); display: flex; min-height: 100vh; align-items: center; justify-content: center; }
+    .auth-wrapper { display: flex; width: 100%; max-width: 960px; min-height: 560px; border-radius: var(--radius-2xl); overflow: hidden; box-shadow: var(--shadow-xl); margin: var(--space-6); }
+    .auth-side {
+      flex: 0 0 42%;
+      background: linear-gradient(135deg, var(--color-primary-900), var(--color-primary-700));
+      padding: var(--space-10);
+      display: flex; flex-direction: column; justify-content: space-between;
+      color: white; position: relative; overflow: hidden;
+    }
+    .auth-side::before { content:''; position:absolute; top:-80px; right:-60px; width:220px; height:220px; background:rgba(255,255,255,0.06); border-radius:50%; }
+    .auth-side::after { content:''; position:absolute; bottom:-80px; left:-40px; width:200px; height:200px; background:rgba(255,255,255,0.04); border-radius:50%; }
+    .auth-side-content { position: relative; z-index:1; }
+    .auth-brand { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-10); text-decoration:none; }
+    .auth-brand-icon { width:42px;height:42px; background:rgba(255,255,255,0.2); border-radius:var(--radius-lg); display:flex;align-items:center;justify-content:center;font-size:1.2rem; }
+    .auth-brand-name { font-family:var(--font-display); font-size:var(--font-size-xl); font-weight:800; color:white; }
+    .auth-side h2 { font-size:var(--font-size-2xl); font-weight:800; font-family:var(--font-display); color:white; margin-bottom:var(--space-3); letter-spacing:-0.02em; }
+    .auth-side p { opacity:0.75; font-size:var(--font-size-sm); line-height:1.7; }
+    .auth-side-features { margin-top: var(--space-8); display:flex; flex-direction:column; gap:var(--space-3); position:relative;z-index:1; }
+    .auth-side-feature { display:flex; align-items:center; gap:var(--space-3); font-size:var(--font-size-sm); opacity:0.85; }
+    .auth-side-feature-icon { width:28px;height:28px; background:rgba(255,255,255,0.15); border-radius:var(--radius-md); display:flex;align-items:center;justify-content:center; font-size:0.85rem; flex-shrink:0; }
+    .auth-form-side { flex:1; background:white; padding:var(--space-10); display:flex; flex-direction:column; justify-content:center; }
+    .auth-form-title { font-family:var(--font-display); font-size:var(--font-size-2xl); font-weight:800; color:var(--color-gray-900); margin-bottom:var(--space-2); }
+    .auth-form-sub { font-size:var(--font-size-sm); color:var(--color-text-muted); margin-bottom:var(--space-8); }
+    .demo-creds { background:var(--color-primary-50); border:1px solid var(--color-primary-200); border-radius:var(--radius-lg); padding:var(--space-4); margin-bottom:var(--space-6); font-size:var(--font-size-xs); }
+    .demo-creds-title { font-weight:700; color:var(--color-primary-700); margin-bottom:var(--space-2); font-size:var(--font-size-xs); text-transform:uppercase; letter-spacing:.05em; }
+    .demo-creds table { width:100%; }
+    .demo-creds td { padding:2px 4px; color:var(--color-gray-700); }
+    .demo-creds td:first-child { font-weight:600; color:var(--color-primary-700); white-space:nowrap; }
+    .role-selector { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-2); margin-bottom:var(--space-5); }
+    .role-btn { padding:var(--space-3); border:2px solid var(--color-gray-200); border-radius:var(--radius-md); text-align:center; cursor:pointer; transition:all var(--transition-fast); background:var(--color-white); }
+    .role-btn:hover { border-color:var(--color-primary-300); background:var(--color-primary-50); }
+    .role-btn.selected { border-color:var(--color-primary); background:var(--color-primary-50); }
+    .role-btn input { display:none; }
+    .role-btn-icon { font-size:1.4rem; display:block; margin-bottom:var(--space-1); }
+    .role-btn-label { font-size:var(--font-size-xs); font-weight:600; color:var(--color-gray-700); }
+    .role-btn.selected .role-btn-label { color:var(--color-primary); }
+    .error-msg { background:var(--color-danger-50); border:1px solid var(--color-danger-100); color:var(--color-danger-700); padding:var(--space-3) var(--space-4); border-radius:var(--radius-md); font-size:var(--font-size-sm); margin-bottom:var(--space-4); display:none; }
+    @media(max-width:700px){ .auth-side{display:none;} .auth-wrapper{max-width:460px; border-radius:var(--radius-xl);} }
+  </style>
+</head>
+<body>
+<div class="auth-wrapper" role="main">
+  <!-- Left side panel -->
+  <div class="auth-side" aria-hidden="true">
+    <div class="auth-side-content">
+      <a href="../index.html" class="auth-brand">
+        <div class="auth-brand-icon">🏛️</div>
+        <span class="auth-brand-name">vAccess</span>
+      </a>
+      <h2>Welcome back</h2>
+      <p>Log in to manage your venue bookings, track approvals, and stay up to date.</p>
+      <div class="auth-side-features">
+        <div class="auth-side-feature"><div class="auth-side-feature-icon">🗓️</div>Book venues in minutes</div>
+        <div class="auth-side-feature"><div class="auth-side-feature-icon">🔔</div>Real-time status notifications</div>
+        <div class="auth-side-feature"><div class="auth-side-feature-icon">✅</div>Admin approval workflow</div>
+        <div class="auth-side-feature"><div class="auth-side-feature-icon">📋</div>Full booking history</div>
+      </div>
+    </div>
+    <div style="position:relative;z-index:1;font-size:var(--font-size-xs);opacity:0.5;">⚠️ Demo — Mock Authentication Only</div>
+  </div>
+
+  <!-- Right form -->
+  <div class="auth-form-side">
+    <div>
+      <h1 class="auth-form-title">Log in to vAccess</h1>
+      <p class="auth-form-sub">Enter your credentials below. Don't have an account? <a href="register.html">Register here</a>.</p>
+
+      <!-- Demo credentials hint -->
+      <div class="demo-creds">
+        <div class="demo-creds-title">🔑 Demo Credentials</div>
+        <table>
+          <tr><td>Student:</td><td>aarav.mehta@college.edu / student123</td></tr>
+          <tr><td>Faculty:</td><td>suresh.kumar@college.edu / faculty123</td></tr>
+          <tr><td>Admin:</td><td>vijay.patil@college.edu / admin123</td></tr>
+        </table>
+      </div>
+
+      <!-- Role selector -->
+      <div class="form-group">
+        <label class="form-label">Select Role <span class="required">*</span></label>
+        <div class="role-selector" id="role-selector" role="radiogroup" aria-label="User Role">
+          <label class="role-btn selected" for="role-student">
+            <input type="radio" name="role" id="role-student" value="student" checked />
+            <span class="role-btn-icon">🎓</span>
+            <span class="role-btn-label">Student</span>
+          </label>
+          <label class="role-btn" for="role-faculty">
+            <input type="radio" name="role" id="role-faculty" value="faculty" />
+            <span class="role-btn-icon">👨‍🏫</span>
+            <span class="role-btn-label">Faculty</span>
+          </label>
+          <label class="role-btn" for="role-admin">
+            <input type="radio" name="role" id="role-admin" value="admin" />
+            <span class="role-btn-icon">🛡️</span>
+            <span class="role-btn-label">Admin</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div class="error-msg" id="login-error" role="alert"></div>
+
+      <!-- Login form -->
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address <span class="required">*</span></label>
+          <input type="email" class="form-control" id="login-email" name="email"
+            placeholder="you@college.edu" autocomplete="email" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password <span class="required">*</span></label>
+          <input type="password" class="form-control" id="login-password" name="password"
+            placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-submit-btn">
+          Log In →
+        </button>
+      </form>
+
+      <p style="text-align:center;margin-top:var(--space-5);font-size:var(--font-size-sm);color:var(--color-text-muted);">
+        New to vAccess? <a href="register.html" style="font-weight:600;">Create an account</a>
+      </p>
+      <p style="text-align:center;margin-top:var(--space-3);">
+        <a href="../index.html" style="font-size:var(--font-size-sm);color:var(--color-text-muted);">← Back to Home</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // If already logged in, redirect
+  const session = getSession();
+  if (session) {
+    window.location.href = session.role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html';
+    return;
+  }
+
+  // Role selector toggle
+  document.querySelectorAll('.role-btn').forEach(label => {
+    label.addEventListener('click', () => {
+      document.querySelectorAll('.role-btn').forEach(l => l.classList.remove('selected'));
+      label.classList.add('selected');
+    });
+  });
+
+  // Auto-fill demo credentials on role change
+  document.querySelectorAll('input[name="role"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const role = radio.value;
+      const emailInput = el('login-email');
+      const passInput  = el('login-password');
+      if (role === 'student') {
+        emailInput.value = 'aarav.mehta@college.edu';
+        passInput.value  = 'student123';
+      } else if (role === 'faculty') {
+        emailInput.value = 'suresh.kumar@college.edu';
+        passInput.value  = 'faculty123';
+      } else if (role === 'admin') {
+        emailInput.value = 'vijay.patil@college.edu';
+        passInput.value  = 'admin123';
+      }
+    });
+  });
+
+  // Handle form submit
+  el('login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email    = el('login-email').value.trim();
+    const password = el('login-password').value;
+    const role     = document.querySelector('input[name="role"]:checked')?.value;
+
+    if (!email || !password || !role) {
+      showError('Please fill in all fields and select a role.');
+      return;
+    }
+
+    const btn = el('login-submit-btn');
+    btn.textContent = 'Logging in...';
+    btn.disabled = true;
+
+    // Simulate a small async delay for realism
+    setTimeout(() => {
+      const result = mockLogin(email, password, role);
+      if (result.success) {
+        window.location.href = role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html';
+      } else {
+        showError(result.error);
+        btn.textContent = 'Log In →';
+        btn.disabled = false;
+      }
+    }, 600);
+  });
+
+  function showError(msg) {
+    const errEl = el('login-error');
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>

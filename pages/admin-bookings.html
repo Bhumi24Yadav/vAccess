@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Bookings & Approvals — vAccess</title>
+  <meta name="description" content="College administrative panel to review, filter, approve, and manage all venue bookings." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Admin Navigation">
+    <a href="admin-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon" style="background:var(--color-navy-dark,#0a192f);">🛡️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub" style="color:var(--color-warning);">Admin Portal</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Administration</div>
+      <ul>
+        <li><a href="admin-dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+        <li>
+          <a href="admin-bookings.html?status=Pending" id="nav-pending">
+            <span class="nav-icon">⏳</span> Pending Approvals
+            <span class="badge badge-warning" id="sidebar-pending-badge" style="margin-left:auto;font-size:0.75rem;display:none;">0</span>
+          </a>
+        </li>
+        <li><a href="admin-bookings.html" id="nav-all-bookings" class="active"><span class="nav-icon">📋</span> All Bookings</a></li>
+        <li><a href="admin-venues.html"><span class="nav-icon">🏛️</span> Venues</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Admin</div>
+          <div class="sidebar-user-role" id="sidebar-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Admin</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Bookings & Approvals</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="badge badge-primary" style="padding:4px 10px;font-size:0.8rem;">Admin Mode</span>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title" id="admin-bookings-title">All Bookings & Approvals</h1>
+          <p class="page-subtitle">Review, approve, or reject venue requests across the institution</p>
+        </div>
+        <div style="display:flex;gap:var(--space-2);">
+          <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
+            <span>📥</span> Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Stats Filter Chips -->
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:var(--space-5);">
+        <div class="stat-card" style="cursor:pointer;" onclick="setStatusFilter('all')">
+          <div class="stat-icon blue">📋</div>
+          <div class="stat-info">
+            <div class="stat-value" id="count-all">0</div>
+            <div class="stat-label">All Bookings</div>
+          </div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="setStatusFilter('Pending')">
+          <div class="stat-icon yellow">⏳</div>
+          <div class="stat-info">
+            <div class="stat-value" id="count-pending">0</div>
+            <div class="stat-label">Pending Action</div>
+          </div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="setStatusFilter('Approved')">
+          <div class="stat-icon green">✓</div>
+          <div class="stat-info">
+            <div class="stat-value" id="count-approved">0</div>
+            <div class="stat-label">Approved</div>
+          </div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="setStatusFilter('Rejected')">
+          <div class="stat-icon red">✕</div>
+          <div class="stat-info">
+            <div class="stat-value" id="count-rejected">0</div>
+            <div class="stat-label">Rejected</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="card" style="margin-bottom:var(--space-5);">
+        <div class="card-body" style="padding:var(--space-4);">
+          <div class="filter-bar" style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;">
+            <!-- Search -->
+            <div class="form-group" style="flex:2;min-width:220px;margin-bottom:0;">
+              <label class="form-label" for="search-input" style="font-size:var(--font-size-xs);">Search</label>
+              <input type="text" id="search-input" class="form-control" placeholder="Search ID, requester, venue, purpose..." />
+            </div>
+
+            <!-- Status -->
+            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+              <label class="form-label" for="status-filter" style="font-size:var(--font-size-xs);">Status</label>
+              <select id="status-filter" class="form-control">
+                <option value="all">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <!-- Venue -->
+            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;">
+              <label class="form-label" for="venue-filter" style="font-size:var(--font-size-xs);">Venue</label>
+              <select id="venue-filter" class="form-control">
+                <option value="all">All Venues</option>
+              </select>
+            </div>
+
+            <!-- Department -->
+            <div class="form-group" style="flex:1;min-width:150px;margin-bottom:0;">
+              <label class="form-label" for="dept-filter" style="font-size:var(--font-size-xs);">Department</label>
+              <select id="dept-filter" class="form-control">
+                <option value="all">All Depts</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Mechanical">Mechanical</option>
+                <option value="Civil">Civil</option>
+                <option value="Information Technology">Information Tech</option>
+              </select>
+            </div>
+
+            <!-- Date -->
+            <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+              <label class="form-label" for="date-filter" style="font-size:var(--font-size-xs);">Event Date</label>
+              <input type="date" id="date-filter" class="form-control" />
+            </div>
+
+            <!-- Reset Button -->
+            <div class="filter-actions" style="display:flex;gap:var(--space-2);margin-bottom:0;">
+              <button class="btn btn-outline" id="btn-reset-filters" title="Reset all filters">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Count -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-3);font-size:var(--font-size-sm);color:var(--color-text-muted);">
+        <div>Showing <strong id="admin-results-count">0</strong> booking requests</div>
+      </div>
+
+      <!-- Desktop Table -->
+      <div class="table-wrapper hide-on-mobile" id="admin-table-wrapper">
+        <div class="table-scroll">
+          <table aria-label="Bookings and approvals list">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Requester</th>
+                <th>Venue</th>
+                <th>Event Date & Time</th>
+                <th>Purpose</th>
+                <th>Members</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div id="admin-mobile-cards" class="show-on-mobile" style="display:none;flex-direction:column;gap:var(--space-3);"></div>
+
+      <!-- Empty State -->
+      <div class="empty-state hidden" id="admin-empty">
+        <div class="empty-state-icon">📋</div>
+        <h3>No bookings found</h3>
+        <p>No booking requests match the selected search criteria.</p>
+        <button class="btn btn-outline" style="margin-top:var(--space-4);" onclick="resetAllFilters()">Clear Filters</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/app.js"></script>
+<script>
+let currentBookings = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+  requireAdmin();
+  const session = getSession();
+
+  // Sidebar info
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = 'Administrator';
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  // Populate venue dropdown
+  populateVenueDropdown();
+
+  // Handle URL status parameter (e.g. ?status=Pending)
+  const urlStatus = getUrlParam('status');
+  if (urlStatus) {
+    el('status-filter').value = urlStatus;
+    if (urlStatus === 'Pending') {
+      el('admin-bookings-title').textContent = 'Pending Booking Approvals';
+      el('nav-pending').classList.add('active');
+      el('nav-all-bookings').classList.remove('active');
+    }
+  }
+
+  // Update stats counters
+  updateStatsHeader();
+
+  // Bind filter events
+  el('search-input').addEventListener('input', debounce(applyFilters, 250));
+  el('status-filter').addEventListener('change', () => {
+    updateTitleForStatus(el('status-filter').value);
+    applyFilters();
+  });
+  el('venue-filter').addEventListener('change', applyFilters);
+  el('dept-filter').addEventListener('change', applyFilters);
+  el('date-filter').addEventListener('change', applyFilters);
+  el('btn-reset-filters').addEventListener('click', resetAllFilters);
+
+  // Initial render
+  applyFilters();
+
+  // Sidebar pending badge
+  const pendingCount = getBookings().filter(b => b.B_Status === 'Pending').length;
+  if (pendingCount > 0) {
+    const badge = el('sidebar-pending-badge');
+    badge.textContent = pendingCount;
+    badge.style.display = 'inline-block';
+  }
+
+  // Logout listener
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Are you sure you want to sign out?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+
+function populateVenueDropdown() {
+  const venues = getVenues();
+  const select = el('venue-filter');
+  venues.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.V_ID;
+    opt.textContent = `${v.V_type} - ${v.SubType}`;
+    select.appendChild(opt);
+  });
+}
+
+function updateStatsHeader() {
+  const stats = getAllBookingStats();
+  el('count-all').textContent = stats.total;
+  el('count-pending').textContent = stats.pending;
+  el('count-approved').textContent = stats.approved;
+  el('count-rejected').textContent = stats.rejected;
+}
+
+function setStatusFilter(status) {
+  el('status-filter').value = status;
+  updateTitleForStatus(status);
+  applyFilters();
+}
+
+function updateTitleForStatus(status) {
+  if (status === 'Pending') {
+    el('admin-bookings-title').textContent = 'Pending Booking Approvals';
+  } else if (status === 'all') {
+    el('admin-bookings-title').textContent = 'All Bookings & Approvals';
+  } else {
+    el('admin-bookings-title').textContent = `${status} Bookings`;
+  }
+}
+
+function resetAllFilters() {
+  el('search-input').value = '';
+  el('status-filter').value = 'all';
+  el('venue-filter').value = 'all';
+  el('dept-filter').value = 'all';
+  el('date-filter').value = '';
+  updateTitleForStatus('all');
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = el('search-input').value.trim();
+  const status = el('status-filter').value;
+  const venueId = el('venue-filter').value;
+  const dept = el('dept-filter').value;
+  const date = el('date-filter').value;
+
+  const filters = {
+    search: search || undefined,
+    status: status !== 'all' ? status : undefined,
+    venueId: venueId !== 'all' ? venueId : undefined,
+    date: date || undefined,
+  };
+
+  let results = getEnrichedBookings(filters);
+
+  // Filter department if specified
+  if (dept !== 'all') {
+    results = results.filter(b => b.requester && b.requester.dept && b.requester.dept.toLowerCase() === dept.toLowerCase());
+  }
+
+  currentBookings = results;
+  el('admin-results-count').textContent = results.length;
+  renderBookings(results);
+}
+
+function renderBookings(list) {
+  const tbody = el('admin-tbody');
+  const cardsContainer = el('admin-mobile-cards');
+  const empty = el('admin-empty');
+  const wrapper = el('admin-table-wrapper');
+
+  if (list.length === 0) {
+    wrapper.classList.add('hidden');
+    cardsContainer.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  wrapper.classList.remove('hidden');
+  empty.classList.add('hidden');
+
+  // Desktop Table Rows
+  tbody.innerHTML = list.map(b => {
+    const isPending = b.B_Status === 'Pending';
+    const req = b.requester || { name: 'Unknown', dept: '—', type: 'User' };
+    const dateFormatted = b.eventDate ? formatDate(b.eventDate) : '—';
+    return `
+      <tr>
+        <td>
+          <a href="admin-booking-details.html?id=${b.B_ID}" class="table-booking-id">${b.B_ID}</a>
+        </td>
+        <td>
+          <div style="font-weight:600;color:var(--color-gray-900);">${escapeHtml(req.name)}</div>
+          <div style="font-size:var(--font-size-xs);color:var(--color-text-muted);">
+            ${escapeHtml(req.dept)} • <span style="text-transform:capitalize;">${escapeHtml(req.type)}</span>
+          </div>
+        </td>
+        <td>
+          <div style="font-weight:500;">${escapeHtml(b.venueName)}</div>
+          <div style="font-size:var(--font-size-xs);color:var(--color-text-muted);">${b.venue ? escapeHtml(b.venue.SubType) : ''}</div>
+        </td>
+        <td>
+          <div style="font-weight:500;">${dateFormatted}</div>
+          <div style="font-size:var(--font-size-xs);color:var(--color-text-muted);">${b.timeRange}</div>
+        </td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(b.Purpose || b.B_Purpose || '')}">
+          ${escapeHtml(b.Purpose || b.B_Purpose || '—')}
+        </td>
+        <td>${b.noOfMembers || b.NoOfMembers || '—'}</td>
+        <td>${statusBadge(b.B_Status)}</td>
+        <td>
+          <a href="admin-booking-details.html?id=${b.B_ID}" class="btn btn-sm ${isPending ? 'btn-primary' : 'btn-secondary'}">
+            ${isPending ? 'Review' : 'Details'}
+          </a>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Mobile Cards
+  cardsContainer.innerHTML = list.map(b => {
+    const req = b.requester || { name: 'Unknown', dept: '—', type: 'User' };
+    const dateFormatted = b.eventDate ? formatDate(b.eventDate) : '—';
+    return `
+      <div class="card" style="padding:var(--space-4);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-2);">
+          <div>
+            <span class="table-booking-id">${b.B_ID}</span>
+            <div style="font-weight:600;font-size:var(--font-size-md);margin-top:2px;">${escapeHtml(b.venueName)}</div>
+          </div>
+          ${statusBadge(b.B_Status)}
+        </div>
+        <div style="font-size:var(--font-size-sm);color:var(--color-text-muted);margin-bottom:var(--space-2);">
+          Requester: <strong>${escapeHtml(req.name)}</strong> (${escapeHtml(req.dept)})
+        </div>
+        <div style="font-size:var(--font-size-sm);margin-bottom:var(--space-3);">
+          📅 ${dateFormatted} | ⏰ ${b.timeRange}
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <a href="admin-booking-details.html?id=${b.B_ID}" class="btn btn-sm btn-primary">
+            ${b.B_Status === 'Pending' ? 'Review & Decide' : 'View Full Details'}
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function exportCSV() {
+  if (currentBookings.length === 0) {
+    toast.warning('No bookings to export');
+    return;
+  }
+  const headers = ['Booking ID', 'Requester Name', 'Role', 'Department', 'Venue', 'Event Date', 'Time', 'Members', 'Purpose', 'Status'];
+  const rows = currentBookings.map(b => [
+    b.B_ID,
+    b.requester ? b.requester.name : '',
+    b.requester ? b.requester.type : '',
+    b.requester ? b.requester.dept : '',
+    b.venueName,
+    b.eventDate || '',
+    b.timeRange || '',
+    b.noOfMembers || b.NoOfMembers || '',
+    `"${(b.Purpose || b.B_Purpose || '').replace(/"/g, '""')}"`,
+    b.B_Status
+  ]);
+
+  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `vAccess_Bookings_${today()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast.success('Bookings exported to CSV');
+}
+</script>
+</body>
+</html>
