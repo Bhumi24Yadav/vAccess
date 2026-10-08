@@ -19,13 +19,14 @@ router.post('/bookings', async (req, res) => {
             endtime 
         } = req.body;
 
+        // 1. Check for time slot conflicts using Title-Case status
         const conflictQuery = `
             SELECT t.* 
             FROM timeslot t
             JOIN booking b ON t.b_id = b.b_id
             WHERE b.v_id = $1 
               AND t.eventdate = $2 
-              AND b.b_status != 'REJECTED'
+              AND b.b_status != 'Rejected'
               AND (t.starttime < $4 AND t.endtime > $3)
         `;
 
@@ -39,22 +40,32 @@ router.post('/bookings', async (req, res) => {
             });
         }
 
+        // 2. Safely generate the next sequential b_id
+        const bookingIdResult = await client.query('SELECT COALESCE(MAX(b_id), 0) + 1 AS next_id FROM booking');
+        const nextBId = bookingIdResult.rows[0].next_id;
+
+        // 3. Insert booking with explicit b_id and Title-Case status
         const insertBookingQuery = `
-            INSERT INTO booking (b_date, b_status, purpose, noofmembers, eventdate, rno, fno, v_id)
-            VALUES (CURRENT_DATE, 'PENDING', $1, $2, $3, $4, $5, $6)
+            INSERT INTO booking (b_id, b_date, b_status, purpose, noofmembers, eventdate, rno, fno, v_id)
+            VALUES ($1, CURRENT_DATE, 'Pending', $2, $3, $4, $5, $6, $7)
             RETURNING *;
         `;
 
-        const bookingValues = [purpose, noofmembers || 1, eventdate, rno || null, fno || null, v_id];
+        const bookingValues = [nextBId, purpose, noofmembers || 1, eventdate, rno || null, fno || null, v_id];
         const bookingResult = await client.query(insertBookingQuery, bookingValues);
         const newBooking = bookingResult.rows[0];
 
+        // 4. Safely generate the next sequential slot_id
+        const slotIdResult = await client.query('SELECT COALESCE(MAX(slot_id), 0) + 1 AS next_id FROM timeslot');
+        const nextSlotId = slotIdResult.rows[0].next_id;
+
+        // 5. Insert timeslot with explicit slot_id and b_id
         const insertTimeslotQuery = `
-            INSERT INTO timeslot (b_id, eventdate, starttime, endtime)
-            VALUES ($1, $2, $3, $4);
+            INSERT INTO timeslot (slot_id, b_id, eventdate, starttime, endtime)
+            VALUES ($1, $2, $3, $4, $5);
         `;
 
-        await client.query(insertTimeslotQuery, [newBooking.b_id, eventdate, starttime, endtime]);
+        await client.query(insertTimeslotQuery, [nextSlotId, nextBId, eventdate, starttime, endtime]);
 
         await client.query('COMMIT');
 

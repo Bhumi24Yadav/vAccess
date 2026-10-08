@@ -7,10 +7,18 @@ router.get('/admin/bookings', async (req, res) => {
     try {
         const { status, date } = req.query;
         let query = `
-            SELECT b.*, v.category, v.v_type 
+            SELECT b.*, v.category, v.v_type , v.v_name,s.s_name AS student_name,
+                s.s_email AS student_email,
+                f.f_name AS faculty_name,
+                f.f_email AS faculty_email,
+                t.starttime,
+                t.endtime
             FROM booking b
             JOIN venue v ON b.v_id = v.v_id
-            WHERE 1=1
+            JOIN student s ON b.rno = s.s_id
+            JOIN faculty f ON b.fno = f.f_id
+            JOIN timeslot t ON b.b_id = t.b_id
+            ORDER BY b.b_date DESC
         `;
         let queryParams = [];
 
@@ -33,41 +41,44 @@ router.get('/admin/bookings', async (req, res) => {
 });
 
 // 2. PATCH /api/admin/bookings/:id/approve - Approve a pending booking
-router.patch('/api/admin/bookings/:id/approve', async (req, res) => {
+router.post('/admin/bookings/:id/approve', async (req, res) => {
+    const client = await pool.connect();
     try {
+        await client.query('BEGIN');
         const bookingId = req.params.id;
-        const { adminId, remark } = req.body; // Admin ID performing the action
+        const { a_id } = req.body; // Admin ID performing the action
 
-        // Update booking table status to 'APPROVED'
-        const updateBookingQuery = `
-            UPDATE booking 
-            SET b_status = 'APPROVED' 
-            WHERE b_id = $1 
-            RETURNING *;
-        `;
-        
-        const bookingResult = await pool.query(updateBookingQuery, [bookingId]);
-        if (bookingResult.rows.length === 0) {
-            return res.status(404).json({ success: false, error: "Booking not found" });
+        // 1. Verify booking is Pending
+        const bookingCheck = await client.query(
+            'SELECT * FROM booking WHERE b_id = $1 FOR UPDATE', 
+            [bookingId]
+        );
+        if (bookingCheck.rows.length === 0 || bookingCheck.rows[0].b_status !== 'Pending') {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ success: false, error: "Valid pending booking not found." });
         }
 
-        // Insert record into approval table based on your ER diagram
-        const insertApprovalQuery = `
-            INSERT INTO approval (ap_date, remark, decision, a_id, b_id)
-            VALUES (CURRENT_DATE, $1, 'Approved', $2, $3);
-        `;
-        
-        await pool.query(insertApprovalQuery, [remark || 'Approved by admin', adminId, bookingId]);
+        // 2. Generate next approval ID safely
+        const idResult = await client.query('SELECT COALESCE(MAX(ap_id), 0) + 1 AS next_id FROM approval');
+        const nextApId = idResult.rows[0].next_id;
 
-        return res.status(200).json({
-            message: "Booking approved successfully",
-            bookingId: bookingId,
-            status: "APPROVED"
-        });
+        // 3. Update booking status
+        await client.query('UPDATE booking SET b_status = $1 WHERE b_id = $2', ['Approved', bookingId]);
 
+        // 4. Insert approval record
+        await client.query(
+            'INSERT INTO approval (ap_id, ap_date, b_id, a_id) VALUES ($1, CURRENT_DATE, $2, $3)',
+            [nextApId, bookingId, a_id]
+        );
+
+        await client.query('COMMIT');
+        return res.status(200).json({ success: true, message: "Booking approved successfully." });
     } catch (err) {
+        await client.query('ROLLBACK');
         console.error("Error approving booking:", err.message);
-        return res.status(500).json({ success: false, error: "Server error during approval" });
+        return res.status(500).json({ success: false, error: "Server error during approval." });
+    } finally {
+        client.release();
     }
 });
 
