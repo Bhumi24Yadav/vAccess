@@ -1,6 +1,22 @@
 const express = require('express');
+const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
 const cors = require('cors');
 const app = express();
+
+app.use(session({
+    store: new pgSession({
+        pool: pool
+    }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 60 // 1 hour
+    }
+}));
 
 // Middleware to parse incoming JSON payloads from the frontend
 app.use(cors());
