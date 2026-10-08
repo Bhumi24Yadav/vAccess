@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-// const pool = require('../config/db'); // Database connection pool
+const pool = require('../config/db');
 
-// 1. POST /api/auth/login - Authenticate a user (Student, Faculty, or Admin)
+// POST /api/auth/login - Authenticate by querying admin, faculty, or student tables
 router.post('/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -14,22 +14,37 @@ router.post('/auth/login', async (req, res) => {
             });
         }
 
-        // TODO: When database is connected, query STUDENT, FACULTY, or ADMIN tables by email,
-        // verify password hash, and determine their role.
+        // 1. Check admin table
+        const adminQuery = `SELECT a_id AS id, a_name AS name, a_email AS email FROM admin WHERE a_email = $1`;
+        const adminResult = await pool.query(adminQuery, [email]);
+        if (adminResult.rows.length > 0) {
+            return res.status(200).json({
+                message: "Login successful",
+                user: { ...adminResult.rows[0], role: "ADMIN" }
+            });
+        }
 
-        // Placeholder mock response for testing login
-        // If the email contains 'admin', treat them as an admin, otherwise a student
-        const role = email.includes('admin') ? 'ADMIN' : (email.includes('faculty') ? 'FACULTY' : 'STUDENT');
+        // 2. Check faculty table
+        const facultyQuery = `SELECT fno AS id, f_name AS name, f_email AS email FROM faculty WHERE f_email = $1`;
+        const facultyResult = await pool.query(facultyQuery, [email]);
+        if (facultyResult.rows.length > 0) {
+            return res.status(200).json({
+                message: "Login successful",
+                user: { ...facultyResult.rows[0], role: "FACULTY" }
+            });
+        }
 
-        return res.status(200).json({
-            message: "Login successful",
-            user: {
-                id: 12,
-                name: "Test User",
-                email: email,
-                role: role // 'STUDENT', 'FACULTY', or 'ADMIN'
-            }
-        });
+        // 3. Check student table
+        const studentQuery = `SELECT rno AS id, s_name AS name, s_email AS email FROM student WHERE s_email = $1`;
+        const studentResult = await pool.query(studentQuery, [email]);
+        if (studentResult.rows.length > 0) {
+            return res.status(200).json({
+                message: "Login successful",
+                user: { ...studentResult.rows[0], role: "STUDENT" }
+            });
+        }
+
+        return res.status(401).json({ success: false, error: "Invalid email or password." });
 
     } catch (err) {
         console.error("Error during login:", err.message);
@@ -37,10 +52,9 @@ router.post('/auth/login', async (req, res) => {
     }
 });
 
-// 2. POST /api/auth/logout - End current authenticated session
+// POST /api/auth/logout - End current authenticated session
 router.post('/auth/logout', (req, res) => {
     try {
-        // If using sessions or tokens, clear them here
         return res.status(200).json({ 
             message: "Logged out successfully" 
         });
@@ -49,11 +63,9 @@ router.post('/auth/logout', (req, res) => {
     }
 });
 
-// 3. GET /api/auth/me - Return currently authenticated user profile and role
+// GET /api/auth/me - Return currently authenticated user profile and role
 router.get('/auth/me', (req, res) => {
     try {
-        // This would typically read from an active session or decoded JWT token
-        // Placeholder mock response
         return res.status(200).json({
             id: 12,
             name: "Test Student",
