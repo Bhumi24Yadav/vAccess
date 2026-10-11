@@ -187,6 +187,7 @@
 
 <script src="../js/mock-data.js"></script>
 <script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/venues.js"></script>
 <script src="../js/bookings.js"></script>
@@ -197,6 +198,16 @@ document.addEventListener('DOMContentLoaded', () => {
   requireUser();
   populateFilters();
   renderVenues();
+
+  // Asynchronously sync with backend venue API
+  if (window.vAccessAPI) {
+    window.vAccessAPI.getVenues().then(venues => {
+      if (venues && venues.length) {
+        populateFilters();
+        renderVenues();
+      }
+    }).catch(e => console.warn('Venues sync:', e.message));
+  }
 
   // Filter events
   el('apply-filters-btn').addEventListener('click', renderVenues);

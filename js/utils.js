@@ -171,6 +171,14 @@ function createToastContainer() {
   return c;
 }
 
+const toast = {
+  info: (msg, dur) => showToast(msg, 'info', dur),
+  success: (msg, dur) => showToast(msg, 'success', dur),
+  error: (msg, dur) => showToast(msg, 'error', dur),
+  warning: (msg, dur) => showToast(msg, 'warning', dur)
+};
+window.toast = toast;
+
 // ============================================================
 // MODAL HELPERS
 // ============================================================

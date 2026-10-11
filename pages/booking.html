@@ -277,6 +277,7 @@
 
 <script src="../js/mock-data.js"></script>
 <script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/venues.js"></script>
 <script src="../js/bookings.js"></script>
@@ -543,31 +544,29 @@ function populateReview() {
 }
 
 // ---- SUBMIT ----
-function submitBooking() {
+async function submitBooking() {
   const btn = el('s4-submit');
-  btn.textContent = 'Submitting...';
+  btn.textContent = 'Submitting to Backend...';
   btn.disabled = true;
 
-  setTimeout(() => {
-    try {
-      const newBooking = createBooking({
-        V_ID:       selectedVenue.V_ID,
-        Purpose:    el('s3-purpose').value.trim(),
-        noOfMembers: el('s3-members').value,
-        eventDate:  selectedDate,
-        startTime:  selectedSlot.StartTime,
-        endTime:    selectedSlot.EndTime,
-      });
-      el('confirmation-bid').textContent = newBooking.B_ID;
-      document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
-      el('step-confirm').classList.add('active');
-      showToast('Booking submitted successfully!', 'success');
-    } catch (err) {
-      showToast('Something went wrong. Please try again.', 'error');
-      btn.textContent = '✓ Submit Booking';
-      btn.disabled = false;
-    }
-  }, 700);
+  try {
+    const newBooking = await vAccessAPI.createBooking({
+      V_ID:       selectedVenue.V_ID || selectedVenue.v_id,
+      Purpose:    el('s3-purpose').value.trim(),
+      noOfMembers: el('s3-members').value,
+      eventDate:  selectedDate,
+      startTime:  selectedSlot.StartTime,
+      endTime:    selectedSlot.EndTime,
+    });
+    el('confirmation-bid').textContent = newBooking.B_ID;
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    el('step-confirm').classList.add('active');
+    showToast('Booking submitted and registered with backend!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Something went wrong. Please try again.', 'error');
+    btn.textContent = '✓ Submit Booking';
+    btn.disabled = false;
+  }
 }
 </script>
 </body>

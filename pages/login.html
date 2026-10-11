@@ -139,6 +139,7 @@
 
 <script src="../js/mock-data.js"></script>
 <script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -177,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Handle form submit
-  el('login-form').addEventListener('submit', (e) => {
+  el('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email    = el('login-email').value.trim();
     const password = el('login-password').value;
@@ -189,20 +190,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const btn = el('login-submit-btn');
-    btn.textContent = 'Logging in...';
+    btn.textContent = 'Authenticating with Backend...';
     btn.disabled = true;
 
-    // Simulate a small async delay for realism
-    setTimeout(() => {
-      const result = mockLogin(email, password, role);
+    try {
+      const result = await vAccessAPI.login(email, password, role);
       if (result.success) {
-        window.location.href = role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html';
+        btn.textContent = 'Redirecting...';
+        showToast(result.mode === 'backend' ? '✓ Authenticated via Backend API' : '✓ Logged in (Demo Credentials)', 'success');
+        setTimeout(() => {
+          window.location.href = role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html';
+        }, 500);
       } else {
-        showError(result.error);
+        showError(result.error || 'Invalid email or password.');
         btn.textContent = 'Log In →';
         btn.disabled = false;
       }
-    }, 600);
+    } catch (err) {
+      showError(err.message || 'Login failed. Please check backend connection.');
+      btn.textContent = 'Log In →';
+      btn.disabled = false;
+    }
   });
 
   function showError(msg) {

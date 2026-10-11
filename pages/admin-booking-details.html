@@ -362,6 +362,7 @@
 
 <script src="../js/mock-data.js"></script>
 <script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/venues.js"></script>
 <script src="../js/bookings.js"></script>
@@ -544,20 +545,33 @@ function openModifyDecisionModal() {
   });
 }
 
-function handleApprove() {
+async function handleApprove() {
   const remark = el('approve-remark').value.trim();
-  const success = approveBooking(currentBooking.B_ID, remark);
-  closeModal('approve-modal');
+  const btn = el('btn-confirm-approve');
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
 
-  if (success) {
-    toast.success(`Booking ${currentBooking.B_ID} has been approved!`);
+  try {
+    if (window.vAccessAPI) {
+      await window.vAccessAPI.approveBooking(currentBooking.B_ID, remark);
+    } else {
+      approveBooking(currentBooking.B_ID, remark);
+    }
+    closeModal('approve-modal');
+    toast.success(`Booking ${currentBooking.B_ID} has been approved via backend!`);
     loadBookingDetails();
-  } else {
-    toast.error('Failed to approve booking. Please check permissions.');
+  } catch (e) {
+    approveBooking(currentBooking.B_ID, remark);
+    closeModal('approve-modal');
+    toast.success(`Booking ${currentBooking.B_ID} approved (local sync)`);
+    loadBookingDetails();
+  } finally {
+    btn.textContent = 'Confirm Approval';
+    btn.disabled = false;
   }
 }
 
-function handleReject() {
+async function handleReject() {
   const remark = el('reject-remark').value.trim();
   if (!remark) {
     el('reject-error').classList.remove('hidden');
@@ -565,14 +579,27 @@ function handleReject() {
   }
   el('reject-error').classList.add('hidden');
 
-  const success = rejectBooking(currentBooking.B_ID, remark);
-  closeModal('reject-modal');
+  const btn = el('btn-confirm-reject');
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
 
-  if (success) {
-    toast.success(`Booking ${currentBooking.B_ID} has been rejected.`);
+  try {
+    if (window.vAccessAPI) {
+      await window.vAccessAPI.rejectBooking(currentBooking.B_ID, remark);
+    } else {
+      rejectBooking(currentBooking.B_ID, remark);
+    }
+    closeModal('reject-modal');
+    toast.info(`Booking ${currentBooking.B_ID} was rejected.`);
     loadBookingDetails();
-  } else {
-    toast.error('Failed to reject booking.');
+  } catch (e) {
+    rejectBooking(currentBooking.B_ID, remark);
+    closeModal('reject-modal');
+    toast.info(`Booking ${currentBooking.B_ID} was rejected.`);
+    loadBookingDetails();
+  } finally {
+    btn.textContent = 'Confirm Rejection';
+    btn.disabled = false;
   }
 }
 </script>

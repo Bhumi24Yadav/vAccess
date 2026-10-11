@@ -223,6 +223,7 @@
 
 <script src="../js/mock-data.js"></script>
 <script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/venues.js"></script>
 <script src="../js/bookings.js"></script>
@@ -254,6 +255,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update notification badge
   updateNotifBadge();
+
+  // Async sync with live backend dashboard stats
+  if (window.vAccessAPI) {
+    window.vAccessAPI.getAdminDashboardStats().then(stats => {
+      if (stats) {
+        if (typeof stats.pending !== 'undefined') el('stat-pending').textContent = stats.pending;
+        if (typeof stats.approved !== 'undefined') el('stat-approved').textContent = stats.approved;
+        if (typeof stats.total !== 'undefined') el('stat-total').textContent = stats.total;
+      }
+    }).catch(e => console.warn('Admin stats sync:', e));
+  }
 
   // Logout listener
   el('sidebar-logout').addEventListener('click', (e) => {

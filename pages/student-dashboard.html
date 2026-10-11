@@ -190,6 +190,7 @@
 
 <script src="../js/mock-data.js"></script>
 <script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/venues.js"></script>
 <script src="../js/bookings.js"></script>
@@ -224,6 +225,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update notification badge
   updateNotifBadge();
+
+  // Async sync with live backend
+  if (window.vAccessAPI) {
+    window.vAccessAPI.getNotifications().then(() => {
+      renderNotifPreview();
+      updateNotifBadge();
+    }).catch(e => console.warn(e));
+  }
 
   // Logout
   el('sidebar-logout').addEventListener('click', (e) => {
