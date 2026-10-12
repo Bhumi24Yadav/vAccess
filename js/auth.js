@@ -1,16 +1,11 @@
 /**
  * vAccess — auth.js
- * Mock authentication module.
+ * Client-Side Authentication Module (Frontend Only)
  *
- * IMPORTANT: This is DEMO/MOCK authentication only.
- * No real security is implemented here.
- * Replace the functions below with real fetch()/API calls
- * when connecting a backend.
- *
- * Mock credentials:
- *   Student:  any email in MOCK_STUDENTS, password: "student123"
- *   Faculty:  any email in MOCK_FACULTY, password: "faculty123"
- *   Admin:    vijay.patil@college.edu | deepa.nair@college.edu, password: "admin123"
+ * Implements real user credential validation against localStorage:
+ * - Student (rno, S_name, S_Email, Dept, ContactNo.)
+ * - Faculty (fno, F_name, F_Email, Dept, ContactNo.)
+ * - Admin (A_ID, A_Name, A_Email)
  */
 
 const SESSION_KEY = 'va_session';
@@ -22,16 +17,6 @@ const SESSION_KEY = 'va_session';
 /**
  * Get the currently logged-in user session.
  * Returns null if not logged in.
- *
- * Session object shape:
- * {
- *   role: 'student' | 'faculty' | 'admin',
- *   id: rno | fno | A_ID,
- *   name: string,
- *   email: string,
- *   dept: string | null,
- *   A_ID: string | null  (admin only)
- * }
  */
 function getSession() {
   const raw = localStorage.getItem(SESSION_KEY);
@@ -61,22 +46,27 @@ function isAdmin() {
 }
 
 // ============================================================
-// MOCK LOGIN
+// LOGIN VALIDATION
 // ============================================================
 
 /**
- * Attempt login with email, password, and role.
- * Returns { success: true, session } or { success: false, error: string }
- *
- * REPLACE THIS with a fetch() POST to your API when integrating backend.
+ * Authenticate user with email, password, and role against stored credentials.
  */
 function mockLogin(email, password, role) {
+  if (!email || !password || !role) {
+    return { success: false, error: 'Please provide email, password, and select your role.' };
+  }
   email = email.trim().toLowerCase();
 
   if (role === 'admin') {
     const admins = JSON.parse(localStorage.getItem('va_admins') || '[]');
     const admin = admins.find(a => a.A_Email.toLowerCase() === email && a.password === password);
-    if (!admin) return { success: false, error: 'Invalid admin credentials.' };
+    if (!admin) {
+      if (admins.length === 0) {
+        return { success: false, error: 'No admin accounts exist yet. Please register an Administrator account first.' };
+      }
+      return { success: false, error: 'Invalid admin email or password.' };
+    }
     const session = {
       role: 'admin',
       id: admin.A_ID,
@@ -91,8 +81,13 @@ function mockLogin(email, password, role) {
 
   if (role === 'student') {
     const students = JSON.parse(localStorage.getItem('va_students') || '[]');
-    const student = students.find(s => s.S_Email.toLowerCase() === email && password === 'student123');
-    if (!student) return { success: false, error: 'Invalid student credentials. (password: student123)' };
+    const student = students.find(s => s.S_Email.toLowerCase() === email && s.password === password);
+    if (!student) {
+      if (students.length === 0) {
+        return { success: false, error: 'No student accounts found. Please register an account first.' };
+      }
+      return { success: false, error: 'Invalid student email or password.' };
+    }
     const session = {
       role: 'student',
       id: student.rno,
@@ -108,14 +103,20 @@ function mockLogin(email, password, role) {
 
   if (role === 'faculty') {
     const faculty = JSON.parse(localStorage.getItem('va_faculty') || '[]');
-    const f = faculty.find(f => f.F_Email.toLowerCase() === email && password === 'faculty123');
-    if (!f) return { success: false, error: 'Invalid faculty credentials. (password: faculty123)' };
+    const f = faculty.find(fc => fc.F_Email.toLowerCase() === email && fc.password === password);
+    if (!f) {
+      if (faculty.length === 0) {
+        return { success: false, error: 'No faculty accounts found. Please register an account first.' };
+      }
+      return { success: false, error: 'Invalid faculty email or password.' };
+    }
     const session = {
       role: 'faculty',
       id: f.fno,
       name: f.F_name,
       email: f.F_Email,
       dept: f.Dept,
+      contactNo: f.ContactNo,
       A_ID: null,
     };
     setSession(session);
@@ -126,37 +127,37 @@ function mockLogin(email, password, role) {
 }
 
 // ============================================================
-// MOCK REGISTER
+// REGISTRATION
 // ============================================================
 
 /**
- * Register a new student.
- * Returns { success: true } or { success: false, error: string }
- *
- * REPLACE with API call when integrating backend.
+ * Register a user according to the ER diagram entity specifications.
+ * Supports Student, Faculty, and Admin.
  */
 function mockRegister({ name, email, contactNo, dept, role, password }) {
+  if (!name || !email || !password || !role) {
+    return { success: false, error: 'Please fill in all required fields.' };
+  }
   email = email.trim().toLowerCase();
 
   if (role === 'student') {
     const students = JSON.parse(localStorage.getItem('va_students') || '[]');
-    if (students.find(s => s.S_Email.toLowerCase() === email)) {
-      return { success: false, error: 'Email is already registered.' };
+    if (students.some(s => s.S_Email.toLowerCase() === email)) {
+      return { success: false, error: 'Email is already registered as a student.' };
     }
-    // Generate next rno
     const nums = students.map(s => parseInt(s.rno.replace('S', ''), 10)).filter(n => !isNaN(n));
     const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
     const newStudent = {
       rno: 'S' + String(nextNum).padStart(3, '0'),
       S_name: name,
-      ContactNo: contactNo,
+      ContactNo: contactNo || '',
       S_Email: email,
-      Dept: dept,
+      Dept: dept || 'General',
+      password: password
     };
     students.push(newStudent);
     localStorage.setItem('va_students', JSON.stringify(students));
 
-    // Auto login after registration
     const session = {
       role: 'student',
       id: newStudent.rno,
@@ -172,8 +173,8 @@ function mockRegister({ name, email, contactNo, dept, role, password }) {
 
   if (role === 'faculty') {
     const faculty = JSON.parse(localStorage.getItem('va_faculty') || '[]');
-    if (faculty.find(f => f.F_Email.toLowerCase() === email)) {
-      return { success: false, error: 'Email is already registered.' };
+    if (faculty.some(f => f.F_Email.toLowerCase() === email)) {
+      return { success: false, error: 'Email is already registered as faculty.' };
     }
     const nums = faculty.map(f => parseInt(f.fno.replace('F', ''), 10)).filter(n => !isNaN(n));
     const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
@@ -181,7 +182,9 @@ function mockRegister({ name, email, contactNo, dept, role, password }) {
       fno: 'F' + String(nextNum).padStart(3, '0'),
       F_name: name,
       F_Email: email,
-      Dept: dept,
+      Dept: dept || 'General',
+      ContactNo: contactNo || '',
+      password: password
     };
     faculty.push(newFaculty);
     localStorage.setItem('va_faculty', JSON.stringify(faculty));
@@ -192,33 +195,57 @@ function mockRegister({ name, email, contactNo, dept, role, password }) {
       name: newFaculty.F_name,
       email: newFaculty.F_Email,
       dept: newFaculty.Dept,
+      contactNo: newFaculty.ContactNo,
       A_ID: null,
     };
     setSession(session);
     return { success: true, session };
   }
 
-  return { success: false, error: 'Registration for admin is not available.' };
+  if (role === 'admin') {
+    const admins = JSON.parse(localStorage.getItem('va_admins') || '[]');
+    if (admins.some(a => a.A_Email.toLowerCase() === email)) {
+      return { success: false, error: 'Email is already registered as an administrator.' };
+    }
+    const nums = admins.map(a => parseInt(a.A_ID.replace('ADM', ''), 10)).filter(n => !isNaN(n));
+    const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
+    const newAdmin = {
+      A_ID: 'ADM' + String(nextNum).padStart(3, '0'),
+      A_Name: name,
+      A_Email: email,
+      password: password,
+      role: 'admin'
+    };
+    admins.push(newAdmin);
+    localStorage.setItem('va_admins', JSON.stringify(admins));
+
+    const session = {
+      role: 'admin',
+      id: newAdmin.A_ID,
+      name: newAdmin.A_Name,
+      email: newAdmin.A_Email,
+      dept: null,
+      A_ID: newAdmin.A_ID,
+    };
+    setSession(session);
+    return { success: true, session };
+  }
+
+  return { success: false, error: 'Invalid user role selected.' };
 }
 
 // ============================================================
 // ROUTE GUARDS
 // ============================================================
 
-/**
- * Redirect to login if not logged in.
- * Call at the top of protected pages.
- */
+/** Redirect to login if not logged in */
 function requireLogin(redirectTo = '../pages/login.html') {
   if (!isLoggedIn()) {
     window.location.href = redirectTo;
   }
 }
 
-/**
- * Redirect to admin dashboard if not admin.
- * Call at the top of admin-only pages.
- */
+/** Redirect to admin login or dashboard */
 function requireAdmin(redirectTo = '../pages/login.html') {
   const s = getSession();
   if (!s || s.role !== 'admin') {
@@ -226,17 +253,14 @@ function requireAdmin(redirectTo = '../pages/login.html') {
   }
 }
 
-/**
- * Redirect admin users away from student pages.
- * Call at the top of student/faculty pages.
- */
+/** Redirect admin users away from student pages */
 function requireUser(redirectTo = '../pages/admin-dashboard.html') {
   const s = getSession();
   if (!s) { window.location.href = '../pages/login.html'; return; }
   if (s.role === 'admin') window.location.href = redirectTo;
 }
 
-/** Logout and redirect */
+/** Logout and redirect to home */
 function logout() {
   clearSession();
   window.location.href = '../index.html';

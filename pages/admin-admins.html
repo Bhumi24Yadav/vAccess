@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrators — vAccess Admin</title>
+  <meta name="description" content="Manage institutional administrator accounts and credentials." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Admin Navigation">
+    <a href="admin-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon" style="background:var(--color-navy-dark,#0a192f);">🛡️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub" style="color:var(--color-warning);">Admin Portal</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Administration</div>
+      <ul>
+        <li><a href="admin-dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+        <li>
+          <a href="admin-bookings.html?status=Pending">
+            <span class="nav-icon">⏳</span> Pending Approvals
+            <span class="badge badge-warning" id="sidebar-pending-badge" style="margin-left:auto;font-size:0.75rem;display:none;">0</span>
+          </a>
+        </li>
+        <li><a href="admin-bookings.html"><span class="nav-icon">📋</span> All Bookings</a></li>
+        <li><a href="admin-venues.html"><span class="nav-icon">🏛️</span> Venues</a></li>
+        <li><a href="admin-students.html"><span class="nav-icon">🎓</span> Students</a></li>
+        <li><a href="admin-faculty.html"><span class="nav-icon">👨‍🏫</span> Faculty</a></li>
+        <li><a href="admin-approvals.html"><span class="nav-icon">✅</span> Approvals Log</a></li>
+        <li><a href="admin-admins.html" class="active"><span class="nav-icon">🛡️</span> Administrators</a></li>
+        <li><a href="admin-er-model.html"><span class="nav-icon">📐</span> ER Model & Database</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Admin</div>
+          <div class="sidebar-user-role" id="sidebar-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Admin</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Admin Staff (Entity: Admin)</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm btn-primary" onclick="openAddAdminModal()">
+          <span>➕</span> Add Administrator
+        </button>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">🛡️ Institutional Administrators</h1>
+          <p class="page-subtitle">Manage administrative user accounts, IDs (<code>A_ID</code>), and approval access privileges</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddAdminModal()">
+          <span>➕</span> Add Administrator
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <div class="table-scroll">
+          <table aria-label="Administrators List">
+            <thead>
+              <tr>
+                <th>Admin ID (A_ID)</th>
+                <th>Administrator Name (A_Name)</th>
+                <th>Email Address (A_Email)</th>
+                <th>Approvals Logged</th>
+                <th>Role Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admins-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="empty-state hidden" id="admins-empty">
+        <div class="empty-state-icon">🛡️</div>
+        <h3>No administrators registered</h3>
+        <p>Register the first administrative account using the button below.</p>
+        <button class="btn btn-primary" onclick="openAddAdminModal()" style="margin-top:var(--space-3);">Add Administrator</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Add / Edit Admin -->
+<div class="modal-overlay" id="admin-modal" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2 class="modal-title" id="admin-modal-title">Add Administrator</h2>
+      <button class="modal-close" data-modal-close aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="admin-form">
+        <input type="hidden" id="admin-edit-id" />
+        <div class="form-group">
+          <label class="form-label" for="admin-name">Full Name (A_Name) <span class="required">*</span></label>
+          <input type="text" id="admin-name" class="form-control" placeholder="e.g. Administrator" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="admin-email">Email (A_Email) <span class="required">*</span></label>
+          <input type="email" id="admin-email" class="form-control" placeholder="admin@college.edu" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="admin-pass">Password <span class="required">*</span></label>
+          <input type="password" id="admin-pass" class="form-control" placeholder="Set password" required />
+        </div>
+        <div class="modal-footer" style="padding:var(--space-4) 0 0;margin-top:var(--space-4);">
+          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Administrator</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireAdmin();
+  const session = getSession();
+
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = 'Administrator';
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  renderAdminsList();
+
+  el('admin-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const editId = el('admin-edit-id').value;
+    const name   = el('admin-name').value.trim();
+    const email  = el('admin-email').value.trim();
+    const pass   = el('admin-pass').value;
+
+    saveAdminUser({
+      A_ID: editId || null,
+      A_Name: name,
+      A_Email: email,
+      password: pass
+    });
+
+    toast.success(`Administrator ${editId ? 'updated' : 'added'} successfully`);
+    closeModal('admin-modal');
+    renderAdminsList();
+  });
+
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Sign out of the Admin Portal?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+
+function renderAdminsList() {
+  const admins = getAdminUsers();
+  const approvals = getApprovals();
+  const currentSession = getSession();
+
+  const tbody = el('admins-tbody');
+  const empty = el('admins-empty');
+
+  if (!admins.length) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  tbody.innerHTML = admins.map(a => {
+    const isCurrent = currentSession && (currentSession.id === a.A_ID || currentSession.email === a.A_Email);
+    const count = approvals.filter(ap => ap.A_ID === a.A_ID).length;
+    return `
+      <tr>
+        <td><strong style="color:var(--color-navy-dark,#0a192f);">${a.A_ID}</strong></td>
+        <td><strong>${escapeHtml(a.A_Name)}</strong> ${isCurrent ? '<span class="badge badge-primary">You</span>' : ''}</td>
+        <td>${escapeHtml(a.A_Email)}</td>
+        <td><span class="badge badge-info">${count} approval decisions</span></td>
+        <td><span class="badge badge-success">Administrator</span></td>
+        <td>
+          <button class="btn btn-xs btn-outline" onclick="openEditAdminModal('${a.A_ID}')">Edit</button>
+          ${!isCurrent ? `<button class="btn btn-xs btn-danger" onclick="handleDeleteAdmin('${a.A_ID}')">Delete</button>` : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openAddAdminModal() {
+  el('admin-edit-id').value = '';
+  el('admin-modal-title').textContent = 'Add Administrator';
+  el('admin-name').value = '';
+  el('admin-email').value = '';
+  el('admin-pass').value = 'admin123';
+  openModal('admin-modal');
+}
+
+function openEditAdminModal(aId) {
+  const a = getAdminById(aId);
+  if (!a) return;
+  el('admin-edit-id').value = a.A_ID;
+  el('admin-modal-title').textContent = `Edit Administrator (${a.A_ID})`;
+  el('admin-name').value = a.A_Name;
+  el('admin-email').value = a.A_Email;
+  el('admin-pass').value = a.password || '';
+  openModal('admin-modal');
+}
+
+function handleDeleteAdmin(aId) {
+  showConfirm({
+    title: 'Delete Administrator',
+    message: `Are you sure you want to delete administrator account ${aId}?`,
+    icon: '🗑️',
+    confirmText: 'Delete Admin',
+    confirmClass: 'btn-danger',
+    onConfirm: () => {
+      deleteAdminUser(aId);
+      toast.info(`Administrator ${aId} removed.`);
+      renderAdminsList();
+    }
+  });
+}
+</script>
+</body>
+</html>

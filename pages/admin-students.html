@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Directory — vAccess Admin</title>
+  <meta name="description" content="Manage college student records, roll numbers, and contact details." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Admin Navigation">
+    <a href="admin-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon" style="background:var(--color-navy-dark,#0a192f);">🛡️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub" style="color:var(--color-warning);">Admin Portal</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Administration</div>
+      <ul>
+        <li><a href="admin-dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+        <li>
+          <a href="admin-bookings.html?status=Pending">
+            <span class="nav-icon">⏳</span> Pending Approvals
+            <span class="badge badge-warning" id="sidebar-pending-badge" style="margin-left:auto;font-size:0.75rem;display:none;">0</span>
+          </a>
+        </li>
+        <li><a href="admin-bookings.html"><span class="nav-icon">📋</span> All Bookings</a></li>
+        <li><a href="admin-venues.html"><span class="nav-icon">🏛️</span> Venues</a></li>
+        <li><a href="admin-students.html" class="active"><span class="nav-icon">🎓</span> Students</a></li>
+        <li><a href="admin-faculty.html"><span class="nav-icon">👨‍🏫</span> Faculty</a></li>
+        <li><a href="admin-approvals.html"><span class="nav-icon">✅</span> Approvals Log</a></li>
+        <li><a href="admin-admins.html"><span class="nav-icon">🛡️</span> Administrators</a></li>
+        <li><a href="admin-er-model.html"><span class="nav-icon">📐</span> ER Model & Database</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Admin</div>
+          <div class="sidebar-user-role" id="sidebar-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Admin</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Student Directory (Entity: Student)</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm btn-primary" onclick="openAddStudentModal()">
+          <span>➕</span> Add New Student
+        </button>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">🎓 Student Directory & Accounts</h1>
+          <p class="page-subtitle">Manage student profiles, roll numbers (<code>rno</code>), departments, and contact details</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddStudentModal()">
+          <span>➕</span> Add New Student
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--space-5);">
+        <div class="stat-card">
+          <div class="stat-icon blue">🎓</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total-students">0</div>
+            <div class="stat-label">Total Registered Students</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">🏛️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total-depts">0</div>
+            <div class="stat-label">Departments Represented</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">📋</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-student-bookings">0</div>
+            <div class="stat-label">Student Bookings Placed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Bar -->
+      <div class="card" style="margin-bottom:var(--space-5);">
+        <div class="card-body" style="padding:var(--space-4);">
+          <div class="filter-bar" style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;">
+            <div class="form-group" style="flex:2;min-width:220px;margin-bottom:0;">
+              <label class="form-label" for="search-students" style="font-size:var(--font-size-xs);">Search</label>
+              <input type="text" id="search-students" class="form-control" placeholder="Search by name, roll no, or email..." />
+            </div>
+
+            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;">
+              <label class="form-label" for="filter-dept" style="font-size:var(--font-size-xs);">Department</label>
+              <select id="filter-dept" class="form-control">
+                <option value="all">All Departments</option>
+              </select>
+            </div>
+
+            <div class="filter-actions" style="margin-bottom:0;">
+              <button class="btn btn-outline" id="btn-reset-filters">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <div class="table-scroll">
+          <table aria-label="Student Directory">
+            <thead>
+              <tr>
+                <th>Roll No (rno)</th>
+                <th>Student Name (S_name)</th>
+                <th>Email Address (S_Email)</th>
+                <th>Department (Dept)</th>
+                <th>Contact Number (ContactNo.)</th>
+                <th>Bookings Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="empty-state hidden" id="students-empty">
+        <div class="empty-state-icon">🎓</div>
+        <h3>No students found</h3>
+        <p>No student records match your search or no students are registered yet.</p>
+        <button class="btn btn-primary" onclick="openAddStudentModal()" style="margin-top:var(--space-3);">Add First Student</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Add / Edit Student -->
+<div class="modal-overlay" id="student-modal" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h2 class="modal-title" id="student-modal-title">Add New Student</h2>
+      <button class="modal-close" data-modal-close aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="student-form">
+        <input type="hidden" id="student-edit-rno" />
+        <div class="form-group">
+          <label class="form-label" for="student-name">Full Name (S_name) <span class="required">*</span></label>
+          <input type="text" id="student-name" class="form-control" placeholder="e.g. Aarav Mehta" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="student-email">Email (S_Email) <span class="required">*</span></label>
+            <input type="email" id="student-email" class="form-control" placeholder="student@college.edu" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="student-contact">Contact No. <span class="required">*</span></label>
+            <input type="tel" id="student-contact" class="form-control" placeholder="10-digit mobile" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="student-dept">Department <span class="required">*</span></label>
+            <select id="student-dept" class="form-control" required>
+              <option value="">Select Department</option>
+              <option>Computer Science</option>
+              <option>Information Technology</option>
+              <option>Electronics</option>
+              <option>Mechanical</option>
+              <option>Civil</option>
+              <option>Electrical</option>
+              <option>Chemical</option>
+              <option>Mathematics</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="student-password">Login Password <span class="required">*</span></label>
+            <input type="password" id="student-password" class="form-control" placeholder="Set password" required />
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:var(--space-4) 0 0;margin-top:var(--space-4);">
+          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="student-save-btn">Save Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireAdmin();
+  const session = getSession();
+
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = 'Administrator';
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  loadDepartmentFilters();
+  renderStudentList();
+
+  // Search and filter listeners
+  el('search-students').addEventListener('input', renderStudentList);
+  el('filter-dept').addEventListener('change', renderStudentList);
+  el('btn-reset-filters').addEventListener('click', () => {
+    el('search-students').value = '';
+    el('filter-dept').value = 'all';
+    renderStudentList();
+  });
+
+  // Form submit
+  el('student-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const editRno = el('student-edit-rno').value;
+    const name    = el('student-name').value.trim();
+    const email   = el('student-email').value.trim();
+    const contact = el('student-contact').value.trim();
+    const dept    = el('student-dept').value;
+    const pass    = el('student-password').value;
+
+    saveStudent({
+      rno: editRno || null,
+      S_name: name,
+      S_Email: email,
+      ContactNo: contact,
+      Dept: dept,
+      password: pass
+    });
+
+    toast.success(`Student ${editRno ? 'updated' : 'added'} successfully`);
+    closeModal('student-modal');
+    loadDepartmentFilters();
+    renderStudentList();
+  });
+
+  // Logout listener
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Sign out of the Admin Portal?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+
+function loadDepartmentFilters() {
+  const students = getStudents();
+  const depts = [...new Set(students.map(s => s.Dept).filter(Boolean))].sort();
+  const select = el('filter-dept');
+  const current = select.value;
+  select.innerHTML = '<option value="all">All Departments</option>' +
+    depts.map(d => `<option value="${escapeHtml(d)}" ${d === current ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+}
+
+function renderStudentList() {
+  const search = el('search-students').value.trim().toLowerCase();
+  const deptFilter = el('filter-dept').value;
+  let students = getStudents();
+  const allBookings = getBookings();
+
+  // Update stats
+  el('stat-total-students').textContent = students.length;
+  el('stat-total-depts').textContent = new Set(students.map(s => s.Dept).filter(Boolean)).size;
+  el('stat-student-bookings').textContent = allBookings.filter(b => b.rno).length;
+
+  if (search) {
+    students = students.filter(s =>
+      s.rno.toLowerCase().includes(search) ||
+      s.S_name.toLowerCase().includes(search) ||
+      s.S_Email.toLowerCase().includes(search) ||
+      (s.ContactNo && s.ContactNo.includes(search))
+    );
+  }
+  if (deptFilter !== 'all') {
+    students = students.filter(s => s.Dept === deptFilter);
+  }
+
+  const tbody = el('students-tbody');
+  const empty = el('students-empty');
+
+  if (!students.length) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  tbody.innerHTML = students.map(s => {
+    const bCount = allBookings.filter(b => b.rno === s.rno).length;
+    return `
+      <tr>
+        <td><strong style="color:var(--color-primary);font-family:var(--font-mono);">${s.rno}</strong></td>
+        <td><strong>${escapeHtml(s.S_name)}</strong></td>
+        <td>${escapeHtml(s.S_Email)}</td>
+        <td><span class="badge badge-gray">${escapeHtml(s.Dept || '—')}</span></td>
+        <td>${escapeHtml(s.ContactNo || '—')}</td>
+        <td><span class="badge ${bCount > 0 ? 'badge-primary' : 'badge-gray'}">${bCount} booking${bCount === 1 ? '' : 's'}</span></td>
+        <td>
+          <button class="btn btn-xs btn-outline" onclick="openEditStudentModal('${s.rno}')">Edit</button>
+          <button class="btn btn-xs btn-danger" onclick="handleDeleteStudent('${s.rno}')">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openAddStudentModal() {
+  el('student-edit-rno').value = '';
+  el('student-modal-title').textContent = 'Add New Student Record';
+  el('student-name').value = '';
+  el('student-email').value = '';
+  el('student-contact').value = '';
+  el('student-dept').value = '';
+  el('student-password').value = 'password123';
+  openModal('student-modal');
+}
+
+function openEditStudentModal(rno) {
+  const s = getStudentByRno(rno);
+  if (!s) return;
+  el('student-edit-rno').value = s.rno;
+  el('student-modal-title').textContent = `Edit Student (${s.rno})`;
+  el('student-name').value = s.S_name;
+  el('student-email').value = s.S_Email;
+  el('student-contact').value = s.ContactNo || '';
+  el('student-dept').value = s.Dept || '';
+  el('student-password').value = s.password || '';
+  openModal('student-modal');
+}
+
+function handleDeleteStudent(rno) {
+  showConfirm({
+    title: 'Delete Student Record',
+    message: `Are you sure you want to delete student ${rno}?`,
+    icon: '🗑️',
+    confirmText: 'Delete Student',
+    confirmClass: 'btn-danger',
+    onConfirm: () => {
+      deleteStudent(rno);
+      toast.info(`Student ${rno} deleted.`);
+      loadDepartmentFilters();
+      renderStudentList();
+    }
+  });
+}
+</script>
+</body>
+</html>

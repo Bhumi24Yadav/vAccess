@@ -1,26 +1,20 @@
 /**
  * vAccess — admin.js
- * Admin-specific logic: approval workflow, admin data access.
- *
- * REPLACE localStorage calls with fetch() API calls when integrating backend.
+ * Administrative entity management and approval workflow logic.
+ * Aligned with the 7 entities from the ER Diagram:
+ * - Student, Faculty, Venue, Booking, TimeSlot, Approval, Admin
  */
 
 // ============================================================
-// APPROVAL CRUD
+// APPROVAL WORKFLOW
 // ============================================================
 
-/**
- * Get all admin approvals.
- * REPLACE: return await fetch('/api/approvals').then(r => r.json())
- */
+/** Get all admin approvals */
 function getApprovals() {
   return JSON.parse(localStorage.getItem('va_approvals') || '[]');
 }
 
-/**
- * Get the approval record for a specific booking.
- * REPLACE: return await fetch(`/api/approvals?bookingId=${bId}`).then(r => r.json())
- */
+/** Get the approval record for a specific booking */
 function getApprovalForBooking(bId) {
   return getApprovals().find(a => a.B_ID === bId) || null;
 }
@@ -28,9 +22,6 @@ function getApprovalForBooking(bId) {
 /**
  * Approve a booking.
  * Creates an approval record, updates booking status, and sends notification.
- *
- * REPLACE with:
- *   await fetch(`/api/bookings/${bId}/approve`, { method: 'POST', body: JSON.stringify({ remark }) })
  */
 function approveBooking(bId, remark = '') {
   const session = getSession();
@@ -39,13 +30,9 @@ function approveBooking(bId, remark = '') {
   const booking = getBookingById(bId);
   if (!booking) return false;
 
-  // Update booking status
   updateBookingStatus(bId, 'Approved');
-
-  // Create/update approval record
   _upsertApproval(bId, 'Approved', remark, session);
 
-  // Notify requester
   const venue = getVenueById(booking.V_ID);
   const remarkNote = remark ? ` Remark: "${remark}"` : '';
   createNotification({
@@ -62,9 +49,6 @@ function approveBooking(bId, remark = '') {
 /**
  * Reject a booking.
  * Creates an approval record, updates booking status, and sends notification.
- *
- * REPLACE with:
- *   await fetch(`/api/bookings/${bId}/reject`, { method: 'POST', body: JSON.stringify({ remark }) })
  */
 function rejectBooking(bId, remark = '') {
   const session = getSession();
@@ -73,13 +57,9 @@ function rejectBooking(bId, remark = '') {
   const booking = getBookingById(bId);
   if (!booking) return false;
 
-  // Update booking status
   updateBookingStatus(bId, 'Rejected');
-
-  // Create/update approval record
   _upsertApproval(bId, 'Rejected', remark, session);
 
-  // Notify requester
   const venue = getVenueById(booking.V_ID);
   const remarkNote = remark ? ` Reason: "${remark}"` : '';
   createNotification({
@@ -93,14 +73,14 @@ function rejectBooking(bId, remark = '') {
   return true;
 }
 
-/** Internal: create or update an approval record */
+/** Internal: Upsert approval entity record */
 function _upsertApproval(bId, decision, remark, session) {
   const approvals = getApprovals();
   const existing  = approvals.findIndex(a => a.B_ID === bId);
   const record = {
     Ap_ID:    existing >= 0 ? approvals[existing].Ap_ID : generateApprovalId(),
     Ap_Date:  today(),
-    A_ID:     session.id,
+    A_ID:     session.id || session.A_ID || 'ADM001',
     A_Name:   session.name,
     A_Email:  session.email,
     Decision: decision,
@@ -116,41 +96,187 @@ function _upsertApproval(bId, decision, remark, session) {
 }
 
 // ============================================================
-// ADMIN STATISTICS
+// ER ENTITY 1: STUDENT (rno, S_name, S_Email, Dept, ContactNo.)
 // ============================================================
 
-/** Get dashboard statistics for the admin view */
-function getAdminStats() {
-  const venues   = getVenues();
-  const stats    = getAllBookingStats();
-  return {
-    ...stats,
-    availableVenues: venues.filter(v => v.V_Status === 'Available').length,
-    totalVenues:     venues.length,
-    bookedVenues:    venues.filter(v => v.V_Status === 'Booked').length,
-    maintenanceVenues: venues.filter(v => v.V_Status === 'Maintenance').length,
+function getStudents() {
+  return JSON.parse(localStorage.getItem('va_students') || '[]');
+}
+
+function getStudentByRno(rno) {
+  return getStudents().find(s => s.rno === rno) || null;
+}
+
+function saveStudent(data) {
+  const students = getStudents();
+  if (data.rno) {
+    const idx = students.findIndex(s => s.rno === data.rno);
+    if (idx !== -1) {
+      students[idx] = { ...students[idx], ...data };
+      localStorage.setItem('va_students', JSON.stringify(students));
+      return students[idx];
+    }
+  }
+  // New student
+  const nums = students.map(s => parseInt(s.rno.replace('S', ''), 10)).filter(n => !isNaN(n));
+  const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
+  const newS = {
+    rno: data.rno || ('S' + String(nextNum).padStart(3, '0')),
+    S_name: data.S_name,
+    S_Email: data.S_Email,
+    Dept: data.Dept,
+    ContactNo: data.ContactNo || '',
+    password: data.password || 'password123'
   };
+  students.push(newS);
+  localStorage.setItem('va_students', JSON.stringify(students));
+  return newS;
+}
+
+function deleteStudent(rno) {
+  let students = getStudents();
+  students = students.filter(s => s.rno !== rno);
+  localStorage.setItem('va_students', JSON.stringify(students));
+  return true;
 }
 
 // ============================================================
-// ADMIN BOOKING LIST WITH ENRICHED DATA
+// ER ENTITY 2: FACULTY (fno, F_name, F_Email, Dept, ContactNo.)
 // ============================================================
+
+function getFacultyList() {
+  return JSON.parse(localStorage.getItem('va_faculty') || '[]');
+}
+
+function getFacultyByFno(fno) {
+  return getFacultyList().find(f => f.fno === fno) || null;
+}
+
+function saveFaculty(data) {
+  const faculty = getFacultyList();
+  if (data.fno) {
+    const idx = faculty.findIndex(f => f.fno === data.fno);
+    if (idx !== -1) {
+      faculty[idx] = { ...faculty[idx], ...data };
+      localStorage.setItem('va_faculty', JSON.stringify(faculty));
+      return faculty[idx];
+    }
+  }
+  const nums = faculty.map(f => parseInt(f.fno.replace('F', ''), 10)).filter(n => !isNaN(n));
+  const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
+  const newF = {
+    fno: data.fno || ('F' + String(nextNum).padStart(3, '0')),
+    F_name: data.F_name,
+    F_Email: data.F_Email,
+    Dept: data.Dept,
+    ContactNo: data.ContactNo || '',
+    password: data.password || 'password123'
+  };
+  faculty.push(newF);
+  localStorage.setItem('va_faculty', JSON.stringify(faculty));
+  return newF;
+}
+
+function deleteFaculty(fno) {
+  let faculty = getFacultyList();
+  faculty = faculty.filter(f => f.fno !== fno);
+  localStorage.setItem('va_faculty', JSON.stringify(faculty));
+  return true;
+}
+
+// ============================================================
+// ER ENTITY 7: ADMIN (A_ID, A_Name, A_Email)
+// ============================================================
+
+function getAdminUsers() {
+  return JSON.parse(localStorage.getItem('va_admins') || '[]');
+}
+
+function getAdminById(aId) {
+  return getAdminUsers().find(a => a.A_ID === aId) || null;
+}
+
+function saveAdminUser(data) {
+  const admins = getAdminUsers();
+  if (data.A_ID) {
+    const idx = admins.findIndex(a => a.A_ID === data.A_ID);
+    if (idx !== -1) {
+      admins[idx] = { ...admins[idx], ...data };
+      localStorage.setItem('va_admins', JSON.stringify(admins));
+      return admins[idx];
+    }
+  }
+  const nums = admins.map(a => parseInt(a.A_ID.replace('ADM', ''), 10)).filter(n => !isNaN(n));
+  const nextNum = nums.length ? Math.max(...nums) + 1 : 1;
+  const newA = {
+    A_ID: data.A_ID || ('ADM' + String(nextNum).padStart(3, '0')),
+    A_Name: data.A_Name,
+    A_Email: data.A_Email,
+    password: data.password || 'admin123',
+    role: 'admin'
+  };
+  admins.push(newA);
+  localStorage.setItem('va_admins', JSON.stringify(admins));
+  return newA;
+}
+
+function deleteAdminUser(aId) {
+  let admins = getAdminUsers();
+  admins = admins.filter(a => a.A_ID !== aId);
+  localStorage.setItem('va_admins', JSON.stringify(admins));
+  return true;
+}
+
+// ============================================================
+// ER ENTITY 5: TIMESLOT MANAGEMENT
+// ============================================================
+
+function deleteTimeslot(slotId) {
+  let slots = getTimeslots();
+  slots = slots.filter(s => s.Slot_ID !== slotId);
+  localStorage.setItem('va_timeslots', JSON.stringify(slots));
+  return true;
+}
+
+// ============================================================
+// ER OVERALL STATISTICS
+// ============================================================
+
+function getAdminStats() {
+  const venues    = getVenues();
+  const stats     = getAllBookingStats();
+  const students  = getStudents();
+  const faculty   = getFacultyList();
+  const approvals = getApprovals();
+  const admins    = getAdminUsers();
+
+  return {
+    ...stats,
+    availableVenues:   venues.filter(v => v.V_Status === 'Available').length,
+    totalVenues:       venues.length,
+    bookedVenues:      venues.filter(v => v.V_Status === 'Booked').length,
+    maintenanceVenues: venues.filter(v => v.V_Status === 'Maintenance').length,
+    totalStudents:     students.length,
+    totalFaculty:      faculty.length,
+    totalApprovals:    approvals.length,
+    totalAdmins:       admins.length
+  };
+}
 
 /**
  * Get all bookings enriched with requester, venue, and timeslot info.
- * Used by admin booking list page.
  */
 function getEnrichedBookings(filters = {}) {
   const bookings = filterBookings({ ...filters });
   return bookings.map(b => {
-    const venue    = getVenueById(b.V_ID);
+    const venue     = getVenueById(b.V_ID);
     const requester = getRequesterInfo(b);
-    const slots    = getTimeslotsForBooking(b.B_ID);
-    const approval = getApprovalForBooking(b.B_ID);
+    const slots     = getTimeslotsForBooking(b.B_ID);
+    const approval  = getApprovalForBooking(b.B_ID);
     return {
       ...b,
       venue,
-      venueName:    venue ? getVenueDisplayName(venue) : 'Unknown',
+      venueName:    venue ? getVenueDisplayName(venue) : 'Unknown Venue',
       requester,
       slots,
       approval,

@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ER Model & Entity Management — vAccess</title>
+  <meta name="description" content="Relational Entity-Relationship diagram and database tables management for vAccess." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+  <style>
+    .er-svg-text { font-family:var(--font-sans); font-size:11px; fill:#1e293b; user-select:none; }
+    .er-svg-title { font-family:var(--font-display); font-weight:700; font-size:13px; }
+    .er-attr-pk { text-decoration: underline; font-weight: 700; }
+    .er-clickable { cursor: pointer; transition: all 0.2s ease; }
+    .er-clickable:hover rect, .er-clickable:hover polygon { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); stroke-width: 2.5px; }
+    .er-legend { display: flex; gap: var(--space-4); align-items: center; font-size: var(--font-size-xs); flex-wrap: wrap; }
+    .er-legend-item { display: flex; align-items: center; gap: 6px; }
+    .er-legend-color { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Admin Navigation">
+    <a href="admin-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon" style="background:var(--color-navy-dark,#0a192f);">🛡️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub" style="color:var(--color-warning);">Admin Portal</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Administration</div>
+      <ul>
+        <li><a href="admin-dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+        <li>
+          <a href="admin-bookings.html?status=Pending">
+            <span class="nav-icon">⏳</span> Pending Approvals
+            <span class="badge badge-warning" id="sidebar-pending-badge" style="margin-left:auto;font-size:0.75rem;display:none;">0</span>
+          </a>
+        </li>
+        <li><a href="admin-bookings.html"><span class="nav-icon">📋</span> All Bookings</a></li>
+        <li><a href="admin-venues.html"><span class="nav-icon">🏛️</span> Venues</a></li>
+        <li><a href="admin-students.html"><span class="nav-icon">🎓</span> Students</a></li>
+        <li><a href="admin-faculty.html"><span class="nav-icon">👨‍🏫</span> Faculty</a></li>
+        <li><a href="admin-approvals.html"><span class="nav-icon">✅</span> Approvals Log</a></li>
+        <li><a href="admin-admins.html"><span class="nav-icon">🛡️</span> Administrators</a></li>
+        <li><a href="admin-er-model.html" class="active"><span class="nav-icon">📐</span> ER Model & Database</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Admin</div>
+          <div class="sidebar-user-role" id="sidebar-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Admin</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">ER Model & Database Architecture</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="badge badge-primary">ER Model Aligned</span>
+        <button class="btn btn-sm btn-outline" onclick="exportDatabaseJSON()">
+          <span>💾</span> Export JSON
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">📐 Entity-Relationship Model & Tables</h1>
+          <p class="page-subtitle">Interactive visual schema diagram & relational data table manager based on the institutional ER Model</p>
+        </div>
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="handleSeedData()">
+            <span>✨</span> Load Sample Records
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="handleClearData()">
+            <span>🗑️</span> Reset Tables
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Entity Counter Cards -->
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:var(--space-3);margin-bottom:var(--space-6);">
+        <div class="stat-card" style="padding:var(--space-3);cursor:pointer;" onclick="switchEntityTab('student')">
+          <div style="font-size:1.5rem;">🎓</div>
+          <div class="stat-info" style="margin-left:8px;">
+            <div class="stat-value" id="cnt-students" style="font-size:1.4rem;">0</div>
+            <div class="stat-label" style="font-size:0.7rem;">Student</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding:var(--space-3);cursor:pointer;" onclick="switchEntityTab('faculty')">
+          <div style="font-size:1.5rem;">👨‍🏫</div>
+          <div class="stat-info" style="margin-left:8px;">
+            <div class="stat-value" id="cnt-faculty" style="font-size:1.4rem;">0</div>
+            <div class="stat-label" style="font-size:0.7rem;">Faculty</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding:var(--space-3);cursor:pointer;" onclick="switchEntityTab('venue')">
+          <div style="font-size:1.5rem;">🏛️</div>
+          <div class="stat-info" style="margin-left:8px;">
+            <div class="stat-value" id="cnt-venues" style="font-size:1.4rem;">0</div>
+            <div class="stat-label" style="font-size:0.7rem;">Venue</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding:var(--space-3);cursor:pointer;" onclick="switchEntityTab('booking')">
+          <div style="font-size:1.5rem;">📋</div>
+          <div class="stat-info" style="margin-left:8px;">
+            <div class="stat-value" id="cnt-bookings" style="font-size:1.4rem;">0</div>
+            <div class="stat-label" style="font-size:0.7rem;">Booking</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding:var(--space-3);cursor:pointer;" onclick="switchEntityTab('timeslot')">
+          <div style="font-size:1.5rem;">⏱️</div>
+          <div class="stat-info" style="margin-left:8px;">
+            <div class="stat-value" id="cnt-timeslots" style="font-size:1.4rem;">0</div>
+            <div class="stat-label" style="font-size:0.7rem;">TimeSlot</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding:var(--space-3);cursor:pointer;" onclick="switchEntityTab('approval')">
+          <div style="font-size:1.5rem;">✅</div>
+          <div class="stat-info" style="margin-left:8px;">
+            <div class="stat-value" id="cnt-approvals" style="font-size:1.4rem;">0</div>
+            <div class="stat-label" style="font-size:0.7rem;">Approval</div>
+          </div>
+        </div>
+        <div class="stat-card" style="padding:var(--space-3);cursor:pointer;" onclick="switchEntityTab('admin')">
+          <div style="font-size:1.5rem;">🛡️</div>
+          <div class="stat-info" style="margin-left:8px;">
+            <div class="stat-value" id="cnt-admins" style="font-size:1.4rem;">0</div>
+            <div class="stat-label" style="font-size:0.7rem;">Admin</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISUAL ER DIAGRAM CANVAS -->
+      <div class="er-canvas-card">
+        <div class="er-canvas-header">
+          <div>
+            <strong>Interactive ER Diagram</strong>
+            <span style="font-size:var(--font-size-xs);color:var(--color-text-muted);margin-left:8px;">Click any entity rectangle to jump to its live table below</span>
+          </div>
+          <div class="er-legend">
+            <div class="er-legend-item"><div class="er-legend-color" style="background:#dcfce7;border-color:#86efac;"></div> Student / Admin</div>
+            <div class="er-legend-item"><div class="er-legend-color" style="background:#fef08a;border-color:#fde047;"></div> Faculty / Approval</div>
+            <div class="er-legend-item"><div class="er-legend-color" style="background:#bae6fd;border-color:#7dd3fc;"></div> Venue / TimeSlot</div>
+            <div class="er-legend-item"><div class="er-legend-color" style="background:#e9d5ff;border-color:#d8b4fe;"></div> Booking (Central)</div>
+            <div class="er-legend-item"><span class="er-badge-pk">Underline = Primary Key</span></div>
+          </div>
+        </div>
+        <div class="er-canvas-wrapper">
+          <svg class="er-svg" viewBox="0 0 920 860" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.08" />
+              </filter>
+            </defs>
+
+            <!-- CONNECTOR LINES & RELATIONSHIPS -->
+            <!-- Student to Booking -->
+            <line x1="280" y1="180" x2="415" y2="245" stroke="#94a3b8" stroke-width="2" />
+            <line x1="415" y1="245" x2="460" y2="380" stroke="#94a3b8" stroke-width="2" />
+            <!-- Faculty to Booking -->
+            <line x1="640" y1="180" x2="525" y2="245" stroke="#94a3b8" stroke-width="2" />
+            <line x1="525" y1="245" x2="480" y2="380" stroke="#94a3b8" stroke-width="2" />
+            <!-- Venue to Booking -->
+            <line x1="200" y1="460" x2="310" y2="460" stroke="#94a3b8" stroke-width="2" />
+            <line x1="310" y1="460" x2="430" y2="420" stroke="#94a3b8" stroke-width="2" />
+            <!-- Booking to TimeSlot -->
+            <line x1="510" y1="420" x2="630" y2="460" stroke="#94a3b8" stroke-width="2" />
+            <line x1="630" y1="460" x2="740" y2="460" stroke="#94a3b8" stroke-width="2" />
+            <!-- Booking to Approval -->
+            <line x1="470" y1="440" x2="470" y2="580" stroke="#94a3b8" stroke-width="2" />
+            <line x1="470" y1="580" x2="670" y2="700" stroke="#94a3b8" stroke-width="2" />
+            <!-- Admin to Approval -->
+            <line x1="290" y1="730" x2="445" y2="730" stroke="#94a3b8" stroke-width="2" />
+            <line x1="445" y1="730" x2="650" y2="730" stroke="#94a3b8" stroke-width="2" />
+
+            <!-- ATTRIBUTE CONNECTORS -->
+            <!-- Student Attributes -->
+            <line x1="280" y1="140" x2="160" y2="70" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="280" y1="140" x2="280" y2="60" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="280" y1="140" x2="390" y2="70" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="280" y1="150" x2="140" y2="135" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="280" y1="160" x2="130" y2="185" stroke="#cbd5e1" stroke-width="1.5" />
+
+            <!-- Faculty Attributes -->
+            <line x1="640" y1="140" x2="550" y2="70" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="640" y1="140" x2="650" y2="60" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="640" y1="140" x2="770" y2="60" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="640" y1="150" x2="810" y2="115" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="640" y1="160" x2="810" y2="165" stroke="#cbd5e1" stroke-width="1.5" />
+
+            <!-- Venue Attributes -->
+            <line x1="160" y1="440" x2="110" y2="380" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="170" y1="440" x2="190" y2="380" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="150" y1="480" x2="100" y2="540" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="180" y1="480" x2="210" y2="560" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="190" y1="480" x2="300" y2="540" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="180" y1="490" x2="210" y2="630" stroke="#cbd5e1" stroke-width="1.5" />
+
+            <!-- Booking Attributes -->
+            <line x1="430" y1="390" x2="340" y2="310" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="420" y1="410" x2="270" y2="380" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="420" y1="430" x2="270" y2="430" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="440" y1="450" x2="350" y2="480" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="490" y1="450" x2="600" y2="480" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="510" y1="420" x2="740" y2="390" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="520" y1="400" x2="740" y2="330" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="490" y1="390" x2="620" y2="310" stroke="#cbd5e1" stroke-width="1.5" />
+
+            <!-- TimeSlot Attributes -->
+            <line x1="770" y1="440" x2="770" y2="380" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="800" y1="440" x2="860" y2="400" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="750" y1="480" x2="670" y2="540" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="790" y1="480" x2="770" y2="550" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="810" y1="480" x2="860" y2="530" stroke="#cbd5e1" stroke-width="1.5" />
+
+            <!-- Admin Attributes -->
+            <line x1="230" y1="710" x2="110" y2="730" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="230" y1="750" x2="160" y2="800" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="270" y1="760" x2="280" y2="820" stroke="#cbd5e1" stroke-width="1.5" />
+
+            <!-- Approval Attributes -->
+            <line x1="690" y1="710" x2="610" y2="780" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="720" y1="710" x2="730" y2="830" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="740" y1="740" x2="840" y2="830" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="760" y1="740" x2="880" y2="770" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="730" y1="710" x2="740" y2="640" stroke="#cbd5e1" stroke-width="1.5" />
+            <line x1="750" y1="710" x2="840" y2="670" stroke="#cbd5e1" stroke-width="1.5" />
+
+            <!-- ================= ENTITY RECTANGLES ================= -->
+            <!-- 1. STUDENT ENTITY -->
+            <g class="er-clickable" onclick="switchEntityTab('student')">
+              <rect x="230" y="140" width="110" height="50" rx="6" fill="#bbf7d0" stroke="#16a34a" stroke-width="2" filter="url(#shadow)" />
+              <text x="285" y="170" text-anchor="middle" class="er-svg-title" fill="#14532d">Student</text>
+            </g>
+
+            <!-- 2. FACULTY ENTITY -->
+            <g class="er-clickable" onclick="switchEntityTab('faculty')">
+              <rect x="590" y="140" width="110" height="50" rx="6" fill="#fef08a" stroke="#ca8a04" stroke-width="2" filter="url(#shadow)" />
+              <text x="645" y="170" text-anchor="middle" class="er-svg-title" fill="#713f12">Faculty</text>
+            </g>
+
+            <!-- 3. VENUE ENTITY -->
+            <g class="er-clickable" onclick="switchEntityTab('venue')">
+              <rect x="120" y="440" width="105" height="50" rx="6" fill="#bae6fd" stroke="#0284c7" stroke-width="2" filter="url(#shadow)" />
+              <text x="172" y="470" text-anchor="middle" class="er-svg-title" fill="#075985">Venue</text>
+            </g>
+
+            <!-- 4. BOOKING ENTITY (Central) -->
+            <g class="er-clickable" onclick="switchEntityTab('booking')">
+              <rect x="415" y="380" width="120" height="60" rx="8" fill="#e9d5ff" stroke="#9333ea" stroke-width="2.5" filter="url(#shadow)" />
+              <text x="475" y="415" text-anchor="middle" class="er-svg-title" font-size="15" fill="#581c87">Booking</text>
+            </g>
+
+            <!-- 5. TIMESLOT ENTITY -->
+            <g class="er-clickable" onclick="switchEntityTab('timeslot')">
+              <rect x="715" y="440" width="110" height="50" rx="6" fill="#bae6fd" stroke="#0284c7" stroke-width="2" filter="url(#shadow)" />
+              <text x="770" y="470" text-anchor="middle" class="er-svg-title" fill="#075985">TimeSlot</text>
+            </g>
+
+            <!-- 6. ADMIN ENTITY -->
+            <g class="er-clickable" onclick="switchEntityTab('admin')">
+              <rect x="210" y="710" width="110" height="50" rx="6" fill="#bbf7d0" stroke="#16a34a" stroke-width="2" filter="url(#shadow)" />
+              <text x="265" y="740" text-anchor="middle" class="er-svg-title" fill="#14532d">Admin</text>
+            </g>
+
+            <!-- 7. APPROVAL ENTITY -->
+            <g class="er-clickable" onclick="switchEntityTab('approval')">
+              <rect x="655" y="700" width="120" height="50" rx="6" fill="#fef08a" stroke="#ca8a04" stroke-width="2" filter="url(#shadow)" />
+              <text x="715" y="730" text-anchor="middle" class="er-svg-title" fill="#713f12">Approval</text>
+            </g>
+
+            <!-- ================= RELATIONSHIP DIAMONDS ================= -->
+            <!-- makes (Student - Booking) -->
+            <polygon points="415,245 445,225 475,245 445,265" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5" />
+            <text x="445" y="249" text-anchor="middle" font-size="10" font-weight="600" fill="#7c2d12">makes</text>
+            <text x="360" y="220" font-size="11" font-weight="700" fill="#047857">1</text>
+            <text x="440" y="320" font-size="11" font-weight="700" fill="#6d28d9">m</text>
+
+            <!-- makes (Faculty - Booking) -->
+            <polygon points="495,245 525,225 555,245 525,265" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5" />
+            <text x="525" y="249" text-anchor="middle" font-size="10" font-weight="600" fill="#7c2d12">makes</text>
+            <text x="585" y="220" font-size="11" font-weight="700" fill="#b45309">1</text>
+            <text x="500" y="320" font-size="11" font-weight="700" fill="#6d28d9">m</text>
+
+            <!-- has (Venue - Booking) -->
+            <polygon points="280,460 310,440 340,460 310,480" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5" />
+            <text x="310" y="464" text-anchor="middle" font-size="10" font-weight="600" fill="#7c2d12">has</text>
+            <text x="240" y="455" font-size="11" font-weight="700" fill="#0369a1">1</text>
+            <text x="375" y="450" font-size="11" font-weight="700" fill="#6d28d9">m</text>
+
+            <!-- has (Booking - TimeSlot) -->
+            <polygon points="600,460 630,440 660,460 630,480" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5" />
+            <text x="630" y="464" text-anchor="middle" font-size="10" font-weight="600" fill="#7c2d12">has</text>
+            <text x="560" y="450" font-size="11" font-weight="700" fill="#6d28d9">1</text>
+            <text x="690" y="455" font-size="11" font-weight="700" fill="#0369a1">1</text>
+
+            <!-- has (Booking - Approval) -->
+            <polygon points="440,580 470,560 500,580 470,600" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5" />
+            <text x="470" y="584" text-anchor="middle" font-size="10" font-weight="600" fill="#7c2d12">has</text>
+            <text x="480" y="520" font-size="11" font-weight="700" fill="#6d28d9">1</text>
+            <text x="590" y="650" font-size="11" font-weight="700" fill="#b45309">1</text>
+
+            <!-- makes (Admin - Approval) -->
+            <polygon points="430,730 460,710 490,730 460,750" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5" />
+            <text x="460" y="734" text-anchor="middle" font-size="10" font-weight="600" fill="#7c2d12">makes</text>
+            <text x="360" y="725" font-size="11" font-weight="700" fill="#047857">1</text>
+            <text x="560" y="725" font-size="11" font-weight="700" fill="#b45309">m</text>
+
+            <!-- ================= ATTRIBUTE OVALS ================= -->
+            <!-- Student Attributes -->
+            <ellipse cx="140" cy="55" rx="38" ry="18" fill="#dcfce7" stroke="#86efac" />
+            <text x="140" y="59" text-anchor="middle" class="er-svg-text">S_Email</text>
+
+            <ellipse cx="280" cy="45" rx="36" ry="18" fill="#dcfce7" stroke="#86efac" />
+            <text x="280" y="49" text-anchor="middle" class="er-svg-text">S_name</text>
+
+            <!-- PK: rno -->
+            <ellipse cx="390" cy="55" rx="32" ry="18" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" />
+            <text x="390" y="59" text-anchor="middle" class="er-svg-text er-attr-pk" font-weight="700">rno</text>
+
+            <ellipse cx="120" cy="125" rx="30" ry="18" fill="#dcfce7" stroke="#86efac" />
+            <text x="120" y="129" text-anchor="middle" class="er-svg-text">Dept</text>
+
+            <ellipse cx="110" cy="180" rx="42" ry="18" fill="#dcfce7" stroke="#86efac" />
+            <text x="110" y="184" text-anchor="middle" class="er-svg-text">ContactNo.</text>
+
+            <!-- Faculty Attributes -->
+            <ellipse cx="550" cy="55" rx="28" ry="18" fill="#fef9c3" stroke="#fde047" />
+            <text x="550" y="59" text-anchor="middle" class="er-svg-text">Dept</text>
+
+            <ellipse cx="650" cy="45" rx="36" ry="18" fill="#fef9c3" stroke="#fde047" />
+            <text x="650" y="49" text-anchor="middle" class="er-svg-text">F_name</text>
+
+            <!-- PK: fno -->
+            <ellipse cx="760" cy="50" rx="30" ry="18" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5" />
+            <text x="760" y="54" text-anchor="middle" class="er-svg-text er-attr-pk" font-weight="700">fno</text>
+
+            <ellipse cx="820" cy="105" rx="36" ry="18" fill="#fef9c3" stroke="#fde047" />
+            <text x="820" y="109" text-anchor="middle" class="er-svg-text">F_Email</text>
+
+            <ellipse cx="830" cy="165" rx="42" ry="18" fill="#fef9c3" stroke="#fde047" />
+            <text x="830" y="169" text-anchor="middle" class="er-svg-text">ContactNo.</text>
+
+            <!-- Venue Attributes -->
+            <ellipse cx="90" cy="365" rx="38" ry="18" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="90" y="369" text-anchor="middle" class="er-svg-text">Category</text>
+
+            <ellipse cx="190" cy="365" rx="34" ry="18" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="190" y="369" text-anchor="middle" class="er-svg-text">Capacity</text>
+
+            <!-- PK: V_ID -->
+            <ellipse cx="85" cy="545" rx="32" ry="18" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5" />
+            <text x="85" y="549" text-anchor="middle" class="er-svg-text er-attr-pk">V_ID</text>
+
+            <ellipse cx="205" cy="570" rx="34" ry="18" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="205" y="574" text-anchor="middle" class="er-svg-text">V_type</text>
+
+            <ellipse cx="295" cy="545" rx="38" ry="18" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="295" y="549" text-anchor="middle" class="er-svg-text">V_Status</text>
+
+            <ellipse cx="205" cy="635" rx="36" ry="18" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="205" y="639" text-anchor="middle" class="er-svg-text">SubType</text>
+
+            <!-- Booking Attributes -->
+            <ellipse cx="255" cy="375" rx="32" ry="18" fill="#f3e8ff" stroke="#d8b4fe" />
+            <text x="255" y="379" text-anchor="middle" class="er-svg-text">B_Date</text>
+
+            <!-- PK: B_ID -->
+            <ellipse cx="340" cy="300" rx="30" ry="18" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5" />
+            <text x="340" y="304" text-anchor="middle" class="er-svg-text er-attr-pk">B_ID</text>
+
+            <ellipse cx="260" cy="430" rx="36" ry="18" fill="#f3e8ff" stroke="#d8b4fe" />
+            <text x="260" y="434" text-anchor="middle" class="er-svg-text">B_Status</text>
+
+            <ellipse cx="340" cy="485" rx="26" ry="16" fill="#f3e8ff" stroke="#d8b4fe" />
+            <text x="340" y="489" text-anchor="middle" class="er-svg-text">fno</text>
+
+            <ellipse cx="615" cy="485" rx="26" ry="16" fill="#f3e8ff" stroke="#d8b4fe" />
+            <text x="615" y="489" text-anchor="middle" class="er-svg-text">rno</text>
+
+            <ellipse cx="615" cy="300" rx="38" ry="18" fill="#f3e8ff" stroke="#d8b4fe" />
+            <text x="615" y="304" text-anchor="middle" class="er-svg-text">Purpose</text>
+
+            <ellipse cx="745" cy="325" rx="46" ry="18" fill="#f3e8ff" stroke="#d8b4fe" />
+            <text x="745" y="329" text-anchor="middle" class="er-svg-text">noOfMembers</text>
+
+            <ellipse cx="750" cy="385" rx="28" ry="16" fill="#f3e8ff" stroke="#d8b4fe" />
+            <text x="750" y="389" text-anchor="middle" class="er-svg-text">V_ID</text>
+
+            <!-- TimeSlot Attributes -->
+            <!-- PK: Slot_ID -->
+            <ellipse cx="765" cy="365" rx="34" ry="18" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5" />
+            <text x="765" y="369" text-anchor="middle" class="er-svg-text er-attr-pk">Slot_ID</text>
+
+            <ellipse cx="865" cy="395" rx="38" ry="18" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="865" y="399" text-anchor="middle" class="er-svg-text">EventDate</text>
+
+            <ellipse cx="670" cy="545" rx="36" ry="18" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="670" y="549" text-anchor="middle" class="er-svg-text">StartTime</text>
+
+            <ellipse cx="770" cy="555" rx="34" ry="18" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="770" y="559" text-anchor="middle" class="er-svg-text">EndTime</text>
+
+            <ellipse cx="865" cy="535" rx="28" ry="16" fill="#e0f2fe" stroke="#7dd3fc" />
+            <text x="865" y="539" text-anchor="middle" class="er-svg-text">B_ID</text>
+
+            <!-- Admin Attributes -->
+            <!-- PK: A_ID -->
+            <ellipse cx="90" cy="730" rx="32" ry="18" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5" />
+            <text x="90" y="734" text-anchor="middle" class="er-svg-text er-attr-pk">A_ID</text>
+
+            <ellipse cx="155" cy="800" rx="36" ry="18" fill="#dcfce7" stroke="#86efac" />
+            <text x="155" y="804" text-anchor="middle" class="er-svg-text">A_Name</text>
+
+            <ellipse cx="280" cy="820" rx="36" ry="18" fill="#dcfce7" stroke="#86efac" />
+            <text x="280" y="824" text-anchor="middle" class="er-svg-text">A_Email</text>
+
+            <!-- Approval Attributes -->
+            <!-- PK: Ap_ID -->
+            <ellipse cx="600" cy="780" rx="34" ry="18" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5" />
+            <text x="600" y="784" text-anchor="middle" class="er-svg-text er-attr-pk">Ap_ID</text>
+
+            <ellipse cx="730" cy="830" rx="36" ry="18" fill="#fef9c3" stroke="#fde047" />
+            <text x="730" y="834" text-anchor="middle" class="er-svg-text">Ap_Date</text>
+
+            <ellipse cx="835" cy="830" rx="28" ry="16" fill="#fef9c3" stroke="#fde047" />
+            <text x="835" y="834" text-anchor="middle" class="er-svg-text">B_ID</text>
+
+            <ellipse cx="885" cy="770" rx="28" ry="16" fill="#fef9c3" stroke="#fde047" />
+            <text x="885" y="774" text-anchor="middle" class="er-svg-text">A_ID</text>
+
+            <ellipse cx="740" cy="635" rx="34" ry="18" fill="#fef9c3" stroke="#fde047" />
+            <text x="740" y="639" text-anchor="middle" class="er-svg-text">Remark</text>
+
+            <ellipse cx="845" cy="665" rx="36" ry="18" fill="#fef9c3" stroke="#fde047" />
+            <text x="845" y="669" text-anchor="middle" class="er-svg-text">Decision</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ENTITY TABLE EXPLORER -->
+      <div class="card" id="entity-explorer-section">
+        <div class="card-header" style="padding-bottom:0;border-bottom:none;">
+          <div>
+            <h2 class="card-title">Relational Tables Explorer</h2>
+            <div style="font-size:var(--font-size-xs);color:var(--color-text-muted);">View, insert, update, or remove live entity records stored in localStorage</div>
+          </div>
+        </div>
+
+        <!-- Entity Navigation Tabs -->
+        <div class="card-body" style="padding-top:var(--space-2);">
+          <div class="er-tabs-nav" id="er-tabs-nav" role="tablist">
+            <button class="er-tab-btn active" data-tab="student" onclick="switchEntityTab('student')">
+              <span>🎓</span> Student Table
+            </button>
+            <button class="er-tab-btn" data-tab="faculty" onclick="switchEntityTab('faculty')">
+              <span>👨‍🏫</span> Faculty Table
+            </button>
+            <button class="er-tab-btn" data-tab="venue" onclick="switchEntityTab('venue')">
+              <span>🏛️</span> Venue Table
+            </button>
+            <button class="er-tab-btn" data-tab="booking" onclick="switchEntityTab('booking')">
+              <span>📋</span> Booking Table
+            </button>
+            <button class="er-tab-btn" data-tab="timeslot" onclick="switchEntityTab('timeslot')">
+              <span>⏱️</span> TimeSlot Table
+            </button>
+            <button class="er-tab-btn" data-tab="approval" onclick="switchEntityTab('approval')">
+              <span>✅</span> Approval Table
+            </button>
+            <button class="er-tab-btn" data-tab="admin" onclick="switchEntityTab('admin')">
+              <span>🛡️</span> Admin Table
+            </button>
+          </div>
+
+          <!-- Dynamic Schema Header -->
+          <div class="er-schema-summary" id="tab-schema-summary">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Table Container -->
+          <div class="table-wrapper">
+            <div class="table-scroll">
+              <table id="er-data-table">
+                <thead id="er-table-thead"></thead>
+                <tbody id="er-table-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="empty-state hidden" id="er-table-empty">
+            <div class="empty-state-icon" id="er-empty-icon">📂</div>
+            <h3 id="er-empty-title">No records in this table</h3>
+            <p id="er-empty-sub">Add a record using the button above or register a new user.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- UNIVERSAL ENTITY MODAL (Add / Edit) -->
+<div class="modal-overlay" id="entity-crud-modal" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <h2 class="modal-title" id="crud-modal-title">Record Form</h2>
+      <button class="modal-close" data-modal-close aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="crud-modal-form">
+        <input type="hidden" id="crud-entity-type" />
+        <input type="hidden" id="crud-record-id" />
+        <div id="crud-form-fields">
+          <!-- Populated dynamically based on entity -->
+        </div>
+        <div class="modal-footer" style="padding:var(--space-4) 0 0;margin-top:var(--space-4);">
+          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="crud-save-btn">Save Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/app.js"></script>
+<script>
+let currentTab = 'student';
+
+document.addEventListener('DOMContentLoaded', () => {
+  requireAdmin();
+  const session = getSession();
+
+  // Sidebar profile
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = 'Administrator';
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  // Update live counters
+  refreshCounters();
+
+  // Render initial table
+  switchEntityTab('student');
+
+  // Modal form submit handler
+  el('crud-modal-form').addEventListener('submit', handleCrudSave);
+
+  // Logout listener
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Are you sure you want to sign out of the Admin Portal?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+
+function refreshCounters() {
+  const stats = getAdminStats();
+  const timeslots = getTimeslots();
+
+  el('cnt-students').textContent  = stats.totalStudents;
+  el('cnt-faculty').textContent   = stats.totalFaculty;
+  el('cnt-venues').textContent    = stats.totalVenues;
+  el('cnt-bookings').textContent  = stats.total;
+  el('cnt-timeslots').textContent = timeslots.length;
+  el('cnt-approvals').textContent = stats.totalApprovals;
+  el('cnt-admins').textContent    = stats.totalAdmins;
+
+  if (stats.pending > 0) {
+    const badge = el('sidebar-pending-badge');
+    badge.textContent = stats.pending;
+    badge.style.display = 'inline-block';
+  }
+}
+
+function switchEntityTab(tabName) {
+  currentTab = tabName;
+
+  // Update tabs visual state
+  document.querySelectorAll('.er-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+
+  renderTableForEntity(tabName);
+}
+
+function renderTableForEntity(entity) {
+  const thead = el('er-table-thead');
+  const tbody = el('er-table-tbody');
+  const emptyEl = el('er-table-empty');
+  const summaryEl = el('tab-schema-summary');
+
+  tbody.innerHTML = '';
+  thead.innerHTML = '';
+
+  if (entity === 'student') {
+    summaryEl.innerHTML = `
+      <div>
+        <strong>Entity: Student</strong> — Attributes: <code>rno (PK)</code>, <code>S_name</code>, <code>S_Email</code>, <code>Dept</code>, <code>ContactNo.</code>
+      </div>
+      <div>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal('student')">➕ Add Student</button>
+      </div>
+    `;
+    thead.innerHTML = `
+      <tr>
+        <th>Roll No (rno)</th>
+        <th>Student Name (S_name)</th>
+        <th>Email (S_Email)</th>
+        <th>Department (Dept)</th>
+        <th>Contact No (ContactNo.)</th>
+        <th>Actions</th>
+      </tr>
+    `;
+    const students = getStudents();
+    if (!students.length) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    tbody.innerHTML = students.map(s => `
+      <tr>
+        <td><strong style="color:var(--color-primary);">${s.rno}</strong></td>
+        <td>${escapeHtml(s.S_name)}</td>
+        <td>${escapeHtml(s.S_Email)}</td>
+        <td><span class="badge badge-gray">${escapeHtml(s.Dept || '—')}</span></td>
+        <td>${escapeHtml(s.ContactNo || '—')}</td>
+        <td>
+          <button class="btn btn-xs btn-outline" onclick="openEditModal('student', '${s.rno}')">Edit</button>
+          <button class="btn btn-xs btn-danger" onclick="confirmDeleteRecord('student', '${s.rno}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  else if (entity === 'faculty') {
+    summaryEl.innerHTML = `
+      <div>
+        <strong>Entity: Faculty</strong> — Attributes: <code>fno (PK)</code>, <code>F_name</code>, <code>F_Email</code>, <code>Dept</code>, <code>ContactNo.</code>
+      </div>
+      <div>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal('faculty')">➕ Add Faculty</button>
+      </div>
+    `;
+    thead.innerHTML = `
+      <tr>
+        <th>Faculty No (fno)</th>
+        <th>Faculty Name (F_name)</th>
+        <th>Email (F_Email)</th>
+        <th>Department (Dept)</th>
+        <th>Contact No (ContactNo.)</th>
+        <th>Actions</th>
+      </tr>
+    `;
+    const faculty = getFacultyList();
+    if (!faculty.length) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    tbody.innerHTML = faculty.map(f => `
+      <tr>
+        <td><strong style="color:var(--color-warning-dark,#854d0e);">${f.fno}</strong></td>
+        <td>${escapeHtml(f.F_name)}</td>
+        <td>${escapeHtml(f.F_Email)}</td>
+        <td><span class="badge badge-gray">${escapeHtml(f.Dept || '—')}</span></td>
+        <td>${escapeHtml(f.ContactNo || '—')}</td>
+        <td>
+          <button class="btn btn-xs btn-outline" onclick="openEditModal('faculty', '${f.fno}')">Edit</button>
+          <button class="btn btn-xs btn-danger" onclick="confirmDeleteRecord('faculty', '${f.fno}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  else if (entity === 'venue') {
+    summaryEl.innerHTML = `
+      <div>
+        <strong>Entity: Venue</strong> — Attributes: <code>V_ID (PK)</code>, <code>V_type</code>, <code>SubType</code>, <code>Category</code>, <code>Capacity</code>, <code>V_Status</code>
+      </div>
+      <div>
+        <a href="admin-venues.html" class="btn btn-outline btn-sm" style="margin-right:6px;">Full Venue Directory →</a>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal('venue')">➕ Add Venue</button>
+      </div>
+    `;
+    thead.innerHTML = `
+      <tr>
+        <th>Venue ID (V_ID)</th>
+        <th>Type (V_type)</th>
+        <th>Location / SubType</th>
+        <th>Category</th>
+        <th>Capacity</th>
+        <th>Status (V_Status)</th>
+        <th>Actions</th>
+      </tr>
+    `;
+    const venues = getVenues();
+    if (!venues.length) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    tbody.innerHTML = venues.map(v => `
+      <tr>
+        <td><strong>${v.V_ID}</strong></td>
+        <td>${escapeHtml(v.V_type)}</td>
+        <td>${escapeHtml(v.SubType)}</td>
+        <td><span class="badge badge-gray">${escapeHtml(v.Category)}</span></td>
+        <td>${v.Capacity} seats</td>
+        <td><span class="badge ${v.V_Status === 'Available' ? 'badge-success' : v.V_Status === 'Booked' ? 'badge-warning' : 'badge-danger'}">${v.V_Status}</span></td>
+        <td>
+          <button class="btn btn-xs btn-outline" onclick="openEditModal('venue', '${v.V_ID}')">Edit</button>
+          <button class="btn btn-xs btn-danger" onclick="confirmDeleteRecord('venue', '${v.V_ID}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  else if (entity === 'booking') {
+    summaryEl.innerHTML = `
+      <div>
+        <strong>Entity: Booking</strong> — Attributes: <code>B_ID (PK)</code>, <code>B_Date</code>, <code>B_Status</code>, <code>Purpose</code>, <code>noOfMembers</code>, <code>V_ID (FK)</code>, <code>fno (FK)</code>, <code>rno (FK)</code>
+      </div>
+      <div>
+        <a href="admin-bookings.html" class="btn btn-outline btn-sm">Full Bookings View →</a>
+      </div>
+    `;
+    thead.innerHTML = `
+      <tr>
+        <th>Booking ID (B_ID)</th>
+        <th>Date (B_Date)</th>
+        <th>Status</th>
+        <th>Purpose</th>
+        <th>Attendees</th>
+        <th>Venue ID (V_ID)</th>
+        <th>Requester (rno / fno)</th>
+        <th>Actions</th>
+      </tr>
+    `;
+    const bookings = getBookings();
+    if (!bookings.length) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    tbody.innerHTML = bookings.map(b => `
+      <tr>
+        <td><strong><a href="admin-booking-details.html?id=${b.B_ID}">${b.B_ID}</a></strong></td>
+        <td>${formatDate(b.B_Date)}</td>
+        <td>${statusBadge(b.B_Status)}</td>
+        <td>${escapeHtml(b.Purpose)}</td>
+        <td>${b.noOfMembers}</td>
+        <td><code>${b.V_ID}</code></td>
+        <td>${b.rno ? `<span class="badge badge-info">Student: ${b.rno}</span>` : `<span class="badge badge-warning">Faculty: ${b.fno}</span>`}</td>
+        <td>
+          <a href="admin-booking-details.html?id=${b.B_ID}" class="btn btn-xs btn-outline">Review</a>
+          <button class="btn btn-xs btn-danger" onclick="confirmDeleteRecord('booking', '${b.B_ID}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  else if (entity === 'timeslot') {
+    summaryEl.innerHTML = `
+      <div>
+        <strong>Entity: TimeSlot</strong> — Attributes: <code>Slot_ID (PK)</code>, <code>EventDate</code>, <code>StartTime</code>, <code>EndTime</code>, <code>B_ID (FK)</code>
+      </div>
+      <div></div>
+    `;
+    thead.innerHTML = `
+      <tr>
+        <th>Slot ID (Slot_ID)</th>
+        <th>Event Date</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Booking Ref (B_ID)</th>
+        <th>Actions</th>
+      </tr>
+    `;
+    const timeslots = getTimeslots();
+    if (!timeslots.length) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    tbody.innerHTML = timeslots.map(ts => `
+      <tr>
+        <td><strong>${ts.Slot_ID}</strong></td>
+        <td>${formatDate(ts.EventDate)}</td>
+        <td>${formatTime(ts.StartTime)}</td>
+        <td>${formatTime(ts.EndTime)}</td>
+        <td><a href="admin-booking-details.html?id=${ts.B_ID}"><strong>${ts.B_ID}</strong></a></td>
+        <td>
+          <button class="btn btn-xs btn-danger" onclick="confirmDeleteRecord('timeslot', '${ts.Slot_ID}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  else if (entity === 'approval') {
+    summaryEl.innerHTML = `
+      <div>
+        <strong>Entity: Approval</strong> — Attributes: <code>Ap_ID (PK)</code>, <code>Ap_Date</code>, <code>Decision</code>, <code>Remark</code>, <code>B_ID (FK)</code>, <code>A_ID (FK)</code>
+      </div>
+      <div>
+        <a href="admin-approvals.html" class="btn btn-outline btn-sm">Full Approvals Log →</a>
+      </div>
+    `;
+    thead.innerHTML = `
+      <tr>
+        <th>Approval ID (Ap_ID)</th>
+        <th>Decision Date (Ap_Date)</th>
+        <th>Decision</th>
+        <th>Admin Ref (A_ID)</th>
+        <th>Booking Ref (B_ID)</th>
+        <th>Admin Remarks</th>
+        <th>Actions</th>
+      </tr>
+    `;
+    const approvals = getApprovals();
+    if (!approvals.length) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    tbody.innerHTML = approvals.map(ap => `
+      <tr>
+        <td><strong>${ap.Ap_ID}</strong></td>
+        <td>${formatDate(ap.Ap_Date)}</td>
+        <td><span class="badge ${ap.Decision === 'Approved' ? 'badge-success' : 'badge-danger'}">${ap.Decision}</span></td>
+        <td><code>${ap.A_ID || 'ADM001'}</code> (${escapeHtml(ap.A_Name || 'Admin')})</td>
+        <td><a href="admin-booking-details.html?id=${ap.B_ID}"><strong>${ap.B_ID}</strong></a></td>
+        <td><div style="max-width:240px;font-size:var(--font-size-xs);">${escapeHtml(ap.Remark || '—')}</div></td>
+        <td>
+          <a href="admin-booking-details.html?id=${ap.B_ID}" class="btn btn-xs btn-outline">Inspect</a>
+        </td>
+      </tr>
+    `).join('');
+  }
+  else if (entity === 'admin') {
+    summaryEl.innerHTML = `
+      <div>
+        <strong>Entity: Admin</strong> — Attributes: <code>A_ID (PK)</code>, <code>A_Name</code>, <code>A_Email</code>
+      </div>
+      <div>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal('admin')">➕ Add Administrator</button>
+      </div>
+    `;
+    thead.innerHTML = `
+      <tr>
+        <th>Admin ID (A_ID)</th>
+        <th>Name (A_Name)</th>
+        <th>Email (A_Email)</th>
+        <th>Actions</th>
+      </tr>
+    `;
+    const admins = getAdminUsers();
+    if (!admins.length) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    tbody.innerHTML = admins.map(a => `
+      <tr>
+        <td><strong style="color:var(--color-navy-dark,#0a192f);">${a.A_ID}</strong></td>
+        <td>${escapeHtml(a.A_Name)}</td>
+        <td>${escapeHtml(a.A_Email)}</td>
+        <td>
+          <button class="btn btn-xs btn-outline" onclick="openEditModal('admin', '${a.A_ID}')">Edit</button>
+          <button class="btn btn-xs btn-danger" onclick="confirmDeleteRecord('admin', '${a.A_ID}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+// ----------------------------------------------------
+// CRUD MODAL LOGIC
+// ----------------------------------------------------
+function openAddModal(entity) {
+  el('crud-entity-type').value = entity;
+  el('crud-record-id').value = '';
+  el('crud-modal-title').textContent = `Add New ${capitalize(entity)} Record`;
+
+  const container = el('crud-form-fields');
+  container.innerHTML = '';
+
+  if (entity === 'student') {
+    container.innerHTML = `
+      <div class="form-group">
+        <label class="form-label">Full Name (S_name) <span class="required">*</span></label>
+        <input type="text" class="form-control" id="f-sname" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email (S_Email) <span class="required">*</span></label>
+          <input type="email" class="form-control" id="f-semail" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact No. <span class="required">*</span></label>
+          <input type="tel" class="form-control" id="f-scontact" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Department (Dept) <span class="required">*</span></label>
+          <input type="text" class="form-control" id="f-sdept" placeholder="e.g. Computer Science" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password <span class="required">*</span></label>
+          <input type="password" class="form-control" id="f-spass" value="password123" required />
+        </div>
+      </div>
+    `;
+  }
+  else if (entity === 'faculty') {
+    container.innerHTML = `
+      <div class="form-group">
+        <label class="form-label">Faculty Name (F_name) <span class="required">*</span></label>
+        <input type="text" class="form-control" id="f-fname" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email (F_Email) <span class="required">*</span></label>
+          <input type="email" class="form-control" id="f-femail" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact No. <span class="required">*</span></label>
+          <input type="tel" class="form-control" id="f-fcontact" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Department (Dept) <span class="required">*</span></label>
+          <input type="text" class="form-control" id="f-fdept" placeholder="e.g. Electronics" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password <span class="required">*</span></label>
+          <input type="password" class="form-control" id="f-fpass" value="password123" required />
+        </div>
+      </div>
+    `;
+  }
+  else if (entity === 'venue') {
+    container.innerHTML = `
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Venue Type (V_type) <span class="required">*</span></label>
+          <input type="text" class="form-control" id="f-vtype" placeholder="Auditorium, Seminar Hall..." required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">SubType / Location <span class="required">*</span></label>
+          <input type="text" class="form-control" id="f-vsub" placeholder="Block A 2nd Floor..." required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category <span class="required">*</span></label>
+          <select class="form-control" id="f-vcat" required>
+            <option>Academic</option>
+            <option>Large Events</option>
+            <option>Meeting</option>
+            <option>Sports</option>
+            <option>Technical</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Capacity <span class="required">*</span></label>
+          <input type="number" class="form-control" id="f-vcap" min="1" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Operational Status (V_Status) <span class="required">*</span></label>
+        <select class="form-control" id="f-vstatus" required>
+          <option value="Available">Available</option>
+          <option value="Booked">Booked</option>
+          <option value="Maintenance">Maintenance</option>
+        </select>
+      </div>
+    `;
+  }
+  else if (entity === 'admin') {
+    container.innerHTML = `
+      <div class="form-group">
+        <label class="form-label">Admin Name (A_Name) <span class="required">*</span></label>
+        <input type="text" class="form-control" id="f-aname" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Admin Email (A_Email) <span class="required">*</span></label>
+        <input type="email" class="form-control" id="f-aemail" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password <span class="required">*</span></label>
+        <input type="password" class="form-control" id="f-apass" value="admin123" required />
+      </div>
+    `;
+  }
+
+  openModal('entity-crud-modal');
+}
+
+function openEditModal(entity, id) {
+  openAddModal(entity);
+  el('crud-record-id').value = id;
+  el('crud-modal-title').textContent = `Edit ${capitalize(entity)} (${id})`;
+
+  if (entity === 'student') {
+    const s = getStudentByRno(id);
+    if (!s) return;
+    el('f-sname').value = s.S_name;
+    el('f-semail').value = s.S_Email;
+    el('f-scontact').value = s.ContactNo || '';
+    el('f-sdept').value = s.Dept || '';
+    if (el('f-spass')) el('f-spass').value = s.password || '';
+  }
+  else if (entity === 'faculty') {
+    const f = getFacultyByFno(id);
+    if (!f) return;
+    el('f-fname').value = f.F_name;
+    el('f-femail').value = f.F_Email;
+    el('f-fcontact').value = f.ContactNo || '';
+    el('f-fdept').value = f.Dept || '';
+    if (el('f-fpass')) el('f-fpass').value = f.password || '';
+  }
+  else if (entity === 'venue') {
+    const v = getVenueById(id);
+    if (!v) return;
+    el('f-vtype').value = v.V_type;
+    el('f-vsub').value = v.SubType;
+    el('f-vcat').value = v.Category;
+    el('f-vcap').value = v.Capacity;
+    el('f-vstatus').value = v.V_Status;
+  }
+  else if (entity === 'admin') {
+    const a = getAdminById(id);
+    if (!a) return;
+    el('f-aname').value = a.A_Name;
+    el('f-aemail').value = a.A_Email;
+    if (el('f-apass')) el('f-apass').value = a.password || '';
+  }
+}
+
+function handleCrudSave(e) {
+  e.preventDefault();
+  const entity = el('crud-entity-type').value;
+  const id = el('crud-record-id').value;
+
+  if (entity === 'student') {
+    saveStudent({
+      rno: id || null,
+      S_name: el('f-sname').value.trim(),
+      S_Email: el('f-semail').value.trim(),
+      ContactNo: el('f-scontact').value.trim(),
+      Dept: el('f-sdept').value.trim(),
+      password: el('f-spass').value
+    });
+    toast.success(`Student ${id ? 'updated' : 'created'} successfully`);
+  }
+  else if (entity === 'faculty') {
+    saveFaculty({
+      fno: id || null,
+      F_name: el('f-fname').value.trim(),
+      F_Email: el('f-femail').value.trim(),
+      ContactNo: el('f-fcontact').value.trim(),
+      Dept: el('f-fdept').value.trim(),
+      password: el('f-fpass').value
+    });
+    toast.success(`Faculty ${id ? 'updated' : 'created'} successfully`);
+  }
+  else if (entity === 'venue') {
+    if (id) {
+      updateVenueStatus(id, el('f-vstatus').value);
+      const venues = getVenues();
+      const idx = venues.findIndex(v => v.V_ID === id);
+      if (idx !== -1) {
+        venues[idx].V_type = el('f-vtype').value.trim();
+        venues[idx].SubType = el('f-vsub').value.trim();
+        venues[idx].Category = el('f-vcat').value;
+        venues[idx].Capacity = parseInt(el('f-vcap').value, 10);
+        localStorage.setItem('va_venues', JSON.stringify(venues));
+      }
+    } else {
+      addVenue({
+        V_type: el('f-vtype').value.trim(),
+        SubType: el('f-vsub').value.trim(),
+        Category: el('f-vcat').value,
+        Capacity: parseInt(el('f-vcap').value, 10),
+        V_Status: el('f-vstatus').value
+      });
+    }
+    toast.success(`Venue ${id ? 'updated' : 'added'} successfully`);
+  }
+  else if (entity === 'admin') {
+    saveAdminUser({
+      A_ID: id || null,
+      A_Name: el('f-aname').value.trim(),
+      A_Email: el('f-aemail').value.trim(),
+      password: el('f-apass').value
+    });
+    toast.success(`Admin account ${id ? 'updated' : 'created'} successfully`);
+  }
+
+  closeModal('entity-crud-modal');
+  refreshCounters();
+  renderTableForEntity(entity);
+}
+
+function confirmDeleteRecord(entity, id) {
+  showConfirm({
+    title: `Delete ${capitalize(entity)} Record`,
+    message: `Are you sure you want to permanently delete record ${id}?`,
+    icon: '🗑️',
+    confirmText: 'Delete',
+    confirmClass: 'btn-danger',
+    onConfirm: () => {
+      if (entity === 'student') deleteStudent(id);
+      else if (entity === 'faculty') deleteFaculty(id);
+      else if (entity === 'venue') {
+        let venues = getVenues().filter(v => v.V_ID !== id);
+        localStorage.setItem('va_venues', JSON.stringify(venues));
+      }
+      else if (entity === 'booking') {
+        let bookings = getBookings().filter(b => b.B_ID !== id);
+        localStorage.setItem('va_bookings', JSON.stringify(bookings));
+      }
+      else if (entity === 'timeslot') deleteTimeslot(id);
+      else if (entity === 'admin') deleteAdminUser(id);
+
+      toast.info(`Record ${id} deleted.`);
+      refreshCounters();
+      renderTableForEntity(entity);
+    }
+  });
+}
+
+function handleSeedData() {
+  showConfirm({
+    title: 'Seed Sample Academic Records',
+    message: 'This will populate clean sample records for Student, Faculty, Booking, TimeSlot, and Approval tables for testing. Proceed?',
+    icon: '✨',
+    confirmText: 'Load Records',
+    confirmClass: 'btn-primary',
+    onConfirm: () => {
+      seedSampleAcademicData();
+      toast.success('Sample records loaded into tables!');
+      refreshCounters();
+      renderTableForEntity(currentTab);
+    }
+  });
+}
+
+function handleClearData() {
+  showConfirm({
+    title: 'Reset All Relational Tables',
+    message: 'This will purge all records in Students, Faculty, Bookings, TimeSlots, Approvals, and Admins. Reset back to clean state?',
+    icon: '⚠️',
+    confirmText: 'Reset Tables',
+    confirmClass: 'btn-danger',
+    onConfirm: () => {
+      clearAllSystemData();
+      toast.warning('All tables have been reset.');
+      refreshCounters();
+      renderTableForEntity(currentTab);
+    }
+  });
+}
+
+function exportDatabaseJSON() {
+  const dbDump = {
+    exportDate: new Date().toISOString(),
+    schema: 'vAccess ER Model Relational Schema',
+    entities: {
+      Student: getStudents(),
+      Faculty: getFacultyList(),
+      Venue: getVenues(),
+      Booking: getBookings(),
+      TimeSlot: getTimeslots(),
+      Approval: getApprovals(),
+      Admin: getAdminUsers()
+    }
+  };
+  const blob = new Blob([JSON.stringify(dbDump, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `vaccess_er_database_${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast.success('Database exported as JSON');
+}
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+</script>
+</body>
+</html>

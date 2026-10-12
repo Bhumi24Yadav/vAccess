@@ -175,7 +175,7 @@ function getRequesterInfo(booking) {
   if (booking.fno) {
     const faculty = JSON.parse(localStorage.getItem('va_faculty') || '[]');
     const f = faculty.find(fc => fc.fno === booking.fno);
-    if (f) return { name: f.F_name, email: f.F_Email, dept: f.Dept, role: 'Faculty', id: f.fno, contactNo: '—' };
+    if (f) return { name: f.F_name, email: f.F_Email, dept: f.Dept, role: 'Faculty', id: f.fno, contactNo: f.ContactNo || '—' };
   }
   return null;
 }

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Approvals Log — vAccess Admin</title>
+  <meta name="description" content="Review administrative approval records and remarks for campus bookings." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Admin Navigation">
+    <a href="admin-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon" style="background:var(--color-navy-dark,#0a192f);">🛡️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub" style="color:var(--color-warning);">Admin Portal</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Administration</div>
+      <ul>
+        <li><a href="admin-dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+        <li>
+          <a href="admin-bookings.html?status=Pending">
+            <span class="nav-icon">⏳</span> Pending Approvals
+            <span class="badge badge-warning" id="sidebar-pending-badge" style="margin-left:auto;font-size:0.75rem;display:none;">0</span>
+          </a>
+        </li>
+        <li><a href="admin-bookings.html"><span class="nav-icon">📋</span> All Bookings</a></li>
+        <li><a href="admin-venues.html"><span class="nav-icon">🏛️</span> Venues</a></li>
+        <li><a href="admin-students.html"><span class="nav-icon">🎓</span> Students</a></li>
+        <li><a href="admin-faculty.html"><span class="nav-icon">👨‍🏫</span> Faculty</a></li>
+        <li><a href="admin-approvals.html" class="active"><span class="nav-icon">✅</span> Approvals Log</a></li>
+        <li><a href="admin-admins.html"><span class="nav-icon">🛡️</span> Administrators</a></li>
+        <li><a href="admin-er-model.html"><span class="nav-icon">📐</span> ER Model & Database</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Admin</div>
+          <div class="sidebar-user-role" id="sidebar-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Admin</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Approvals History (Entity: Approval)</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <a href="admin-bookings.html?status=Pending" class="btn btn-sm btn-primary">
+          <span>⏳</span> Review Pending Requests
+        </a>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">✅ Institutional Approvals Audit Log</h1>
+          <p class="page-subtitle">Historical decisions, timestamps, and remarks logged by Administrators for all venue requests</p>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--space-5);">
+        <div class="stat-card">
+          <div class="stat-icon blue">✅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total-approvals">0</div>
+            <div class="stat-label">Total Approval Decisions Logged</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✓</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-approved-count">0</div>
+            <div class="stat-label">Approved Venue Grants</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">✕</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-rejected-count">0</div>
+            <div class="stat-label">Rejected Venue Requests</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="card" style="margin-bottom:var(--space-5);">
+        <div class="card-body" style="padding:var(--space-4);">
+          <div class="filter-bar" style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;">
+            <div class="form-group" style="flex:2;min-width:220px;margin-bottom:0;">
+              <label class="form-label" for="search-approvals" style="font-size:var(--font-size-xs);">Search</label>
+              <input type="text" id="search-approvals" class="form-control" placeholder="Search by Approval ID (Ap_ID), Booking (B_ID), remark..." />
+            </div>
+
+            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;">
+              <label class="form-label" for="filter-decision" style="font-size:var(--font-size-xs);">Decision</label>
+              <select id="filter-decision" class="form-control">
+                <option value="all">All Decisions</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div class="filter-actions" style="margin-bottom:0;">
+              <button class="btn btn-outline" id="btn-reset-filters">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <div class="table-scroll">
+          <table aria-label="Approvals History">
+            <thead>
+              <tr>
+                <th>Approval ID (Ap_ID)</th>
+                <th>Booking Ref (B_ID)</th>
+                <th>Decision Date (Ap_Date)</th>
+                <th>Admin (A_ID)</th>
+                <th>Decision</th>
+                <th>Remarks / Justification</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="approvals-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="empty-state hidden" id="approvals-empty">
+        <div class="empty-state-icon">📋</div>
+        <h3>No approval records found</h3>
+        <p>No approval actions match your filter or no requests have been reviewed yet.</p>
+        <a href="admin-bookings.html?status=Pending" class="btn btn-primary" style="margin-top:var(--space-3);">Review Pending Bookings</a>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireAdmin();
+  const session = getSession();
+
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = 'Administrator';
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  renderApprovalsList();
+
+  el('search-approvals').addEventListener('input', renderApprovalsList);
+  el('filter-decision').addEventListener('change', renderApprovalsList);
+  el('btn-reset-filters').addEventListener('click', () => {
+    el('search-approvals').value = '';
+    el('filter-decision').value = 'all';
+    renderApprovalsList();
+  });
+
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Sign out of the Admin Portal?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+
+function renderApprovalsList() {
+  const search = el('search-approvals').value.trim().toLowerCase();
+  const decisionFilter = el('filter-decision').value;
+  let approvals = getApprovals();
+
+  el('stat-total-approvals').textContent = approvals.length;
+  el('stat-approved-count').textContent = approvals.filter(a => a.Decision === 'Approved').length;
+  el('stat-rejected-count').textContent = approvals.filter(a => a.Decision === 'Rejected').length;
+
+  if (search) {
+    approvals = approvals.filter(a =>
+      a.Ap_ID.toLowerCase().includes(search) ||
+      a.B_ID.toLowerCase().includes(search) ||
+      (a.A_ID && a.A_ID.toLowerCase().includes(search)) ||
+      (a.A_Name && a.A_Name.toLowerCase().includes(search)) ||
+      (a.Remark && a.Remark.toLowerCase().includes(search))
+    );
+  }
+  if (decisionFilter !== 'all') {
+    approvals = approvals.filter(a => a.Decision === decisionFilter);
+  }
+
+  const tbody = el('approvals-tbody');
+  const empty = el('approvals-empty');
+
+  if (!approvals.length) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  tbody.innerHTML = approvals.map(ap => `
+    <tr>
+      <td><strong style="color:var(--color-navy-dark,#0a192f);">${ap.Ap_ID}</strong></td>
+      <td><strong><a href="admin-booking-details.html?id=${ap.B_ID}">${ap.B_ID}</a></strong></td>
+      <td>${formatDate(ap.Ap_Date)}</td>
+      <td><code>${ap.A_ID || 'ADM001'}</code> (${escapeHtml(ap.A_Name || 'Admin')})</td>
+      <td><span class="badge ${ap.Decision === 'Approved' ? 'badge-success' : 'badge-danger'}">${ap.Decision}</span></td>
+      <td><div style="max-width:320px;line-height:1.4;">${escapeHtml(ap.Remark || '—')}</div></td>
+      <td>
+        <a href="admin-booking-details.html?id=${ap.B_ID}" class="btn btn-xs btn-outline">Review Details →</a>
+      </td>
+    </tr>
+  `).join('');
+}
+</script>
+</body>
+</html>

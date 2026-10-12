@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faculty Directory — vAccess Admin</title>
+  <meta name="description" content="Manage college faculty records, employee numbers, and contact details." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/dashboard.css" />
+  <link rel="stylesheet" href="../css/responsive.css" />
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Admin Navigation">
+    <a href="admin-dashboard.html" class="sidebar-brand">
+      <div class="sidebar-brand-icon" style="background:var(--color-navy-dark,#0a192f);">🛡️</div>
+      <div>
+        <div class="sidebar-brand-text">vAccess</div>
+        <div class="sidebar-brand-sub" style="color:var(--color-warning);">Admin Portal</div>
+      </div>
+    </a>
+    <nav class="sidebar-nav" role="navigation">
+      <div class="sidebar-section-label">Administration</div>
+      <ul>
+        <li><a href="admin-dashboard.html"><span class="nav-icon">📊</span> Dashboard</a></li>
+        <li>
+          <a href="admin-bookings.html?status=Pending">
+            <span class="nav-icon">⏳</span> Pending Approvals
+            <span class="badge badge-warning" id="sidebar-pending-badge" style="margin-left:auto;font-size:0.75rem;display:none;">0</span>
+          </a>
+        </li>
+        <li><a href="admin-bookings.html"><span class="nav-icon">📋</span> All Bookings</a></li>
+        <li><a href="admin-venues.html"><span class="nav-icon">🏛️</span> Venues</a></li>
+        <li><a href="admin-students.html"><span class="nav-icon">🎓</span> Students</a></li>
+        <li><a href="admin-faculty.html" class="active"><span class="nav-icon">👨‍🏫</span> Faculty</a></li>
+        <li><a href="admin-approvals.html"><span class="nav-icon">✅</span> Approvals Log</a></li>
+        <li><a href="admin-admins.html"><span class="nav-icon">🛡️</span> Administrators</a></li>
+        <li><a href="admin-er-model.html"><span class="nav-icon">📐</span> ER Model & Database</a></li>
+      </ul>
+      <div class="sidebar-section-label">Account</div>
+      <ul>
+        <li>
+          <a href="notifications.html">
+            <span class="nav-icon">🔔</span> Notifications
+            <span class="nav-notif-badge" id="sidebar-notif-badge" style="display:none;"></span>
+          </a>
+        </li>
+        <li><a href="profile.html"><span class="nav-icon">👤</span> Profile</a></li>
+        <li><a href="#" id="sidebar-logout"><span class="nav-icon">🚪</span> Logout</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebar-name">Admin</div>
+          <div class="sidebar-user-role" id="sidebar-role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar" role="banner">
+      <div class="topbar-left">
+        <button class="topbar-toggle" id="sidebar-toggle" aria-label="Open sidebar">☰</button>
+        <div class="topbar-breadcrumb">
+          <span>Admin</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Faculty Directory (Entity: Faculty)</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm btn-primary" onclick="openAddFacultyModal()">
+          <span>➕</span> Add New Faculty
+        </button>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">👨‍🏫 Faculty Directory & Staff</h1>
+          <p class="page-subtitle">Manage faculty profiles, employee IDs (<code>fno</code>), departments, and contact numbers</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddFacultyModal()">
+          <span>➕</span> Add New Faculty
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:var(--space-5);">
+        <div class="stat-card">
+          <div class="stat-icon yellow">👨‍🏫</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-total-faculty">0</div>
+            <div class="stat-label">Total Faculty Members</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">🏛️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-faculty-depts">0</div>
+            <div class="stat-label">Academic Departments</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">📋</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-faculty-bookings">0</div>
+            <div class="stat-label">Faculty Venue Bookings</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters Bar -->
+      <div class="card" style="margin-bottom:var(--space-5);">
+        <div class="card-body" style="padding:var(--space-4);">
+          <div class="filter-bar" style="display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;">
+            <div class="form-group" style="flex:2;min-width:220px;margin-bottom:0;">
+              <label class="form-label" for="search-faculty" style="font-size:var(--font-size-xs);">Search</label>
+              <input type="text" id="search-faculty" class="form-control" placeholder="Search by name, faculty no (fno), email..." />
+            </div>
+
+            <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;">
+              <label class="form-label" for="filter-faculty-dept" style="font-size:var(--font-size-xs);">Department</label>
+              <select id="filter-faculty-dept" class="form-control">
+                <option value="all">All Departments</option>
+              </select>
+            </div>
+
+            <div class="filter-actions" style="margin-bottom:0;">
+              <button class="btn btn-outline" id="btn-reset-filters">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <div class="table-scroll">
+          <table aria-label="Faculty Directory">
+            <thead>
+              <tr>
+                <th>Faculty No (fno)</th>
+                <th>Name (F_name)</th>
+                <th>Email (F_Email)</th>
+                <th>Department (Dept)</th>
+                <th>Contact Number (ContactNo.)</th>
+                <th>Bookings Count</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="faculty-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="empty-state hidden" id="faculty-empty">
+        <div class="empty-state-icon">👨‍🏫</div>
+        <h3>No faculty members found</h3>
+        <p>No faculty records match your criteria or no faculty accounts are registered yet.</p>
+        <button class="btn btn-primary" onclick="openAddFacultyModal()" style="margin-top:var(--space-3);">Add First Faculty</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Add / Edit Faculty -->
+<div class="modal-overlay" id="faculty-modal" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h2 class="modal-title" id="faculty-modal-title">Add New Faculty</h2>
+      <button class="modal-close" data-modal-close aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="faculty-form">
+        <input type="hidden" id="faculty-edit-fno" />
+        <div class="form-group">
+          <label class="form-label" for="faculty-name">Full Name (F_name) <span class="required">*</span></label>
+          <input type="text" id="faculty-name" class="form-control" placeholder="e.g. Dr. Suresh Kumar" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="faculty-email">Email (F_Email) <span class="required">*</span></label>
+            <input type="email" id="faculty-email" class="form-control" placeholder="faculty@college.edu" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="faculty-contact">Contact No. <span class="required">*</span></label>
+            <input type="tel" id="faculty-contact" class="form-control" placeholder="10-digit phone" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="faculty-dept">Department <span class="required">*</span></label>
+            <select id="faculty-dept" class="form-control" required>
+              <option value="">Select Department</option>
+              <option>Computer Science</option>
+              <option>Information Technology</option>
+              <option>Electronics</option>
+              <option>Mechanical</option>
+              <option>Civil</option>
+              <option>Electrical</option>
+              <option>Chemical</option>
+              <option>Mathematics</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="faculty-password">Password <span class="required">*</span></label>
+            <input type="password" id="faculty-password" class="form-control" placeholder="Set password" required />
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:var(--space-4) 0 0;margin-top:var(--space-4);">
+          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="faculty-save-btn">Save Faculty</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal-overlay confirm-dialog" id="confirm-dialog-overlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modal-body">
+      <div class="confirm-icon" id="confirm-icon">⚠️</div>
+      <div class="confirm-title" id="confirm-title">Are you sure?</div>
+      <div class="confirm-message" id="confirm-message"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-modal-close>Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="../js/mock-data.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/venues.js"></script>
+<script src="../js/bookings.js"></script>
+<script src="../js/notifications.js"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  requireAdmin();
+  const session = getSession();
+
+  el('sidebar-name').textContent = session.name;
+  el('sidebar-role').textContent = 'Administrator';
+  el('sidebar-avatar').textContent = getInitials(session.name);
+
+  loadFacultyDeptFilters();
+  renderFacultyList();
+
+  el('search-faculty').addEventListener('input', renderFacultyList);
+  el('filter-faculty-dept').addEventListener('change', renderFacultyList);
+  el('btn-reset-filters').addEventListener('click', () => {
+    el('search-faculty').value = '';
+    el('filter-faculty-dept').value = 'all';
+    renderFacultyList();
+  });
+
+  el('faculty-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const editFno = el('faculty-edit-fno').value;
+    const name    = el('faculty-name').value.trim();
+    const email   = el('faculty-email').value.trim();
+    const contact = el('faculty-contact').value.trim();
+    const dept    = el('faculty-dept').value;
+    const pass    = el('faculty-password').value;
+
+    saveFaculty({
+      fno: editFno || null,
+      F_name: name,
+      F_Email: email,
+      ContactNo: contact,
+      Dept: dept,
+      password: pass
+    });
+
+    toast.success(`Faculty member ${editFno ? 'updated' : 'added'} successfully`);
+    closeModal('faculty-modal');
+    loadFacultyDeptFilters();
+    renderFacultyList();
+  });
+
+  el('sidebar-logout').addEventListener('click', (e) => {
+    e.preventDefault();
+    showConfirm({
+      title: 'Log Out',
+      message: 'Sign out of the Admin Portal?',
+      icon: '🚪',
+      confirmText: 'Log Out',
+      confirmClass: 'btn-primary',
+      onConfirm: () => logout()
+    });
+  });
+});
+
+function loadFacultyDeptFilters() {
+  const faculty = getFacultyList();
+  const depts = [...new Set(faculty.map(f => f.Dept).filter(Boolean))].sort();
+  const select = el('filter-faculty-dept');
+  const current = select.value;
+  select.innerHTML = '<option value="all">All Departments</option>' +
+    depts.map(d => `<option value="${escapeHtml(d)}" ${d === current ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+}
+
+function renderFacultyList() {
+  const search = el('search-faculty').value.trim().toLowerCase();
+  const deptFilter = el('filter-faculty-dept').value;
+  let faculty = getFacultyList();
+  const allBookings = getBookings();
+
+  el('stat-total-faculty').textContent = faculty.length;
+  el('stat-faculty-depts').textContent = new Set(faculty.map(f => f.Dept).filter(Boolean)).size;
+  el('stat-faculty-bookings').textContent = allBookings.filter(b => b.fno).length;
+
+  if (search) {
+    faculty = faculty.filter(f =>
+      f.fno.toLowerCase().includes(search) ||
+      f.F_name.toLowerCase().includes(search) ||
+      f.F_Email.toLowerCase().includes(search) ||
+      (f.ContactNo && f.ContactNo.includes(search))
+    );
+  }
+  if (deptFilter !== 'all') {
+    faculty = faculty.filter(f => f.Dept === deptFilter);
+  }
+
+  const tbody = el('faculty-tbody');
+  const empty = el('faculty-empty');
+
+  if (!faculty.length) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  tbody.innerHTML = faculty.map(f => {
+    const bCount = allBookings.filter(b => b.fno === f.fno).length;
+    return `
+      <tr>
+        <td><strong style="color:var(--color-warning-dark,#854d0e);font-family:var(--font-mono);">${f.fno}</strong></td>
+        <td><strong>${escapeHtml(f.F_name)}</strong></td>
+        <td>${escapeHtml(f.F_Email)}</td>
+        <td><span class="badge badge-gray">${escapeHtml(f.Dept || '—')}</span></td>
+        <td>${escapeHtml(f.ContactNo || '—')}</td>
+        <td><span class="badge ${bCount > 0 ? 'badge-primary' : 'badge-gray'}">${bCount} booking${bCount === 1 ? '' : 's'}</span></td>
+        <td>
+          <button class="btn btn-xs btn-outline" onclick="openEditFacultyModal('${f.fno}')">Edit</button>
+          <button class="btn btn-xs btn-danger" onclick="handleDeleteFaculty('${f.fno}')">Delete</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openAddFacultyModal() {
+  el('faculty-edit-fno').value = '';
+  el('faculty-modal-title').textContent = 'Add New Faculty Record';
+  el('faculty-name').value = '';
+  el('faculty-email').value = '';
+  el('faculty-contact').value = '';
+  el('faculty-dept').value = '';
+  el('faculty-password').value = 'password123';
+  openModal('faculty-modal');
+}
+
+function openEditFacultyModal(fno) {
+  const f = getFacultyByFno(fno);
+  if (!f) return;
+  el('faculty-edit-fno').value = f.fno;
+  el('faculty-modal-title').textContent = `Edit Faculty (${f.fno})`;
+  el('faculty-name').value = f.F_name;
+  el('faculty-email').value = f.F_Email;
+  el('faculty-contact').value = f.ContactNo || '';
+  el('faculty-dept').value = f.Dept || '';
+  el('faculty-password').value = f.password || '';
+  openModal('faculty-modal');
+}
+
+function handleDeleteFaculty(fno) {
+  showConfirm({
+    title: 'Delete Faculty Record',
+    message: `Are you sure you want to delete faculty member ${fno}?`,
+    icon: '🗑️',
+    confirmText: 'Delete Faculty',
+    confirmClass: 'btn-danger',
+    onConfirm: () => {
+      deleteFaculty(fno);
+      toast.info(`Faculty member ${fno} deleted.`);
+      loadFacultyDeptFilters();
+      renderFacultyList();
+    }
+  });
+}
+</script>
+</body>
+</html>

@@ -268,11 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
     el('prof-dept').value = session.dept;
   }
   
-  // Find contact no from mock data
+  // Find contact no from storage
   if (session.role === 'student') {
     const students = JSON.parse(localStorage.getItem('va_students') || '[]');
     const s = students.find(x => x.rno === session.id);
     if (s && s.ContactNo) el('prof-contact').value = s.ContactNo;
+  } else if (session.role === 'faculty') {
+    const faculty = JSON.parse(localStorage.getItem('va_faculty') || '[]');
+    const f = faculty.find(x => x.fno === session.id);
+    if (f && f.ContactNo) el('prof-contact').value = f.ContactNo;
   }
 
   // Populate stats
@@ -319,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         faculty[idx].F_name = newName;
         faculty[idx].F_Email = newEmail;
         faculty[idx].Dept = newDept;
+        faculty[idx].ContactNo = newContact;
         localStorage.setItem('va_faculty', JSON.stringify(faculty));
       }
     }
