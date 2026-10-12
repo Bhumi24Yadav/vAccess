@@ -141,6 +141,7 @@
 <script src="../js/utils.js"></script>
 <script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // If already logged in, redirect
@@ -177,12 +178,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+
   // Handle form submit
   el('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email    = el('login-email').value.trim();
+
+    const email = el('login-email').value.trim();
     const password = el('login-password').value;
-    const role     = document.querySelector('input[name="role"]:checked')?.value;
+    const role = document.querySelector('input[name="role"]:checked')?.value;
 
     if (!email || !password || !role) {
       showError('Please fill in all fields and select a role.');
@@ -195,11 +198,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const result = await vAccessAPI.login(email, password, role);
+
       if (result.success) {
         btn.textContent = 'Redirecting...';
-        showToast(result.mode === 'backend' ? '✓ Authenticated via Backend API' : '✓ Logged in (Demo Credentials)', 'success');
+
+        showToast(
+          result.mode === 'backend'
+            ? '✓ Authenticated via Backend API'
+            : '✓ Logged in (Demo Credentials)',
+          'success'
+        );
+
         setTimeout(() => {
-          window.location.href = role === 'admin' ? 'admin-dashboard.html' : 'student-dashboard.html';
+          window.location.href =
+            role === 'admin'
+              ? 'admin-dashboard.html'
+              : 'student-dashboard.html';
         }, 500);
       } else {
         showError(result.error || 'Invalid email or password.');
@@ -207,17 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = false;
       }
     } catch (err) {
+      console.error(err);
       showError(err.message || 'Login failed. Please check backend connection.');
       btn.textContent = 'Log In →';
       btn.disabled = false;
     }
   });
-
-  function showError(msg) {
-    const errEl = el('login-error');
-    errEl.textContent = msg;
-    errEl.style.display = 'block';
-  }
 });
 </script>
 </body>
