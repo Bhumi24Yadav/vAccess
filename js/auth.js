@@ -60,12 +60,15 @@ function mockLogin(email, password, role) {
 
   if (role === 'admin') {
     const admins = JSON.parse(localStorage.getItem('va_admins') || '[]');
-    const admin = admins.find(a => a.A_Email.toLowerCase() === email && a.password === password);
+    const admin = admins.find(a => a.A_Email.toLowerCase() === email);
     if (!admin) {
       if (admins.length === 0) {
         return { success: false, error: 'No admin accounts exist yet. Please register an Administrator account first.' };
       }
-      return { success: false, error: 'Invalid admin email or password.' };
+      return { success: false, error: 'No administrator account found with this email address.' };
+    }
+    if (admin.password !== password) {
+      return { success: false, error: 'Incorrect password. Please try again.' };
     }
     const session = {
       role: 'admin',
@@ -81,12 +84,15 @@ function mockLogin(email, password, role) {
 
   if (role === 'student') {
     const students = JSON.parse(localStorage.getItem('va_students') || '[]');
-    const student = students.find(s => s.S_Email.toLowerCase() === email && s.password === password);
+    const student = students.find(s => s.S_Email.toLowerCase() === email);
     if (!student) {
       if (students.length === 0) {
         return { success: false, error: 'No student accounts found. Please register an account first.' };
       }
-      return { success: false, error: 'Invalid student email or password.' };
+      return { success: false, error: 'No student account found with this email address.' };
+    }
+    if (student.password !== password) {
+      return { success: false, error: 'Incorrect password. Please try again.' };
     }
     const session = {
       role: 'student',
@@ -103,12 +109,15 @@ function mockLogin(email, password, role) {
 
   if (role === 'faculty') {
     const faculty = JSON.parse(localStorage.getItem('va_faculty') || '[]');
-    const f = faculty.find(fc => fc.F_Email.toLowerCase() === email && fc.password === password);
+    const f = faculty.find(fc => fc.F_Email.toLowerCase() === email);
     if (!f) {
       if (faculty.length === 0) {
         return { success: false, error: 'No faculty accounts found. Please register an account first.' };
       }
-      return { success: false, error: 'Invalid faculty email or password.' };
+      return { success: false, error: 'No faculty account found with this email address.' };
+    }
+    if (f.password !== password) {
+      return { success: false, error: 'Incorrect password. Please try again.' };
     }
     const session = {
       role: 'faculty',
