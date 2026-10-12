@@ -246,31 +246,52 @@ function mockRegister({ name, email, contactNo, dept, role, password }) {
 // ============================================================
 // ROUTE GUARDS
 // ============================================================
+// ROUTE GUARDS
+// ============================================================
 
-/** Redirect to login if not logged in */
-function requireLogin(redirectTo = '../pages/login.html') {
+/** Redirect to login if not logged in. Returns true if authorized, false otherwise. */
+function requireLogin(redirectTo) {
   if (!isLoggedIn()) {
-    window.location.href = redirectTo;
+    const isPagesDir = window.location.pathname.includes('/pages/');
+    const target = redirectTo || (isPagesDir ? 'login.html' : 'pages/login.html');
+    window.location.href = target;
+    return false;
   }
+  return true;
 }
 
-/** Redirect to admin login or dashboard */
-function requireAdmin(redirectTo = '../pages/login.html') {
+/** Redirect to admin login or dashboard. Returns true if admin, false otherwise. */
+function requireAdmin(redirectTo) {
   const s = getSession();
   if (!s || s.role !== 'admin') {
-    window.location.href = redirectTo;
+    const isPagesDir = window.location.pathname.includes('/pages/');
+    const target = redirectTo || (isPagesDir ? 'login.html' : 'pages/login.html');
+    window.location.href = target;
+    return false;
   }
+  return true;
 }
 
-/** Redirect admin users away from student pages */
-function requireUser(redirectTo = '../pages/admin-dashboard.html') {
+/** Redirect admin users away from student pages. Returns true if non-admin user, false otherwise. */
+function requireUser(redirectTo) {
   const s = getSession();
-  if (!s) { window.location.href = '../pages/login.html'; return; }
-  if (s.role === 'admin') window.location.href = redirectTo;
+  const isPagesDir = window.location.pathname.includes('/pages/');
+  if (!s) {
+    window.location.href = isPagesDir ? 'login.html' : 'pages/login.html';
+    return false;
+  }
+  if (s.role === 'admin') {
+    const target = redirectTo || (isPagesDir ? 'admin-dashboard.html' : 'pages/admin-dashboard.html');
+    window.location.href = target;
+    return false;
+  }
+  return true;
 }
 
-/** Logout and redirect to home */
-function logout() {
+/** Logout and redirect cleanly to login page or custom redirect target */
+function logout(redirectTo) {
   clearSession();
-  window.location.href = '../index.html';
+  const isPagesDir = window.location.pathname.includes('/pages/');
+  const target = redirectTo || (isPagesDir ? 'login.html' : 'pages/login.html');
+  window.location.href = target;
 }

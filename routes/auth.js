@@ -101,10 +101,20 @@ router.post('/auth/login', async (req, res) => {
 // POST /api/auth/logout - End current authenticated session
 router.post('/auth/logout', (req, res) => {
     try {
-        return res.status(200).json({ 
-            message: "Logged out successfully" 
-        });
+        if (req.session) {
+            req.session.destroy(err => {
+                if (err) {
+                    console.error("Session destruction error:", err);
+                    return res.status(500).json({ success: false, error: "Server error during logout" });
+                }
+                res.clearCookie('connect.sid');
+                return res.status(200).json({ success: true, message: "Logged out successfully" });
+            });
+        } else {
+            return res.status(200).json({ success: true, message: "Logged out successfully" });
+        }
     } catch (err) {
+        console.error("Error during logout:", err.message);
         return res.status(500).json({ success: false, error: "Server error during logout" });
     }
 });

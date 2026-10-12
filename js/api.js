@@ -33,8 +33,14 @@
       });
     },
 
-    logout() {
-      logout();
+    logout(redirectTo) {
+      if (typeof window.logout === 'function') {
+        window.logout(redirectTo);
+      } else {
+        localStorage.removeItem('va_session');
+        const isPagesDir = window.location.pathname.includes('/pages/');
+        window.location.href = redirectTo || (isPagesDir ? 'login.html' : 'pages/login.html');
+      }
     },
 
     getSession() {

@@ -92,7 +92,9 @@
 <script src="../js/app.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  requireUser();
+  if (!requireUser()) return;
+  const session = getSession();
+  if (!session) return;
   const bId = getParam('id');
   if (!bId) { renderError('No booking ID provided.'); return; }
   el('topbar-bid').textContent = bId;

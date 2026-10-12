@@ -291,7 +291,9 @@ let selectedSlot  = null;
 let currentStep   = 1;
 
 document.addEventListener('DOMContentLoaded', () => {
-  requireUser();
+  if (!requireUser()) return;
+  const session = getSession();
+  if (!session) return;
 
   // Check for pre-selected venue from URL
   const preVenueId = getParam('venue');

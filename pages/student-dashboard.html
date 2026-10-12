@@ -198,8 +198,9 @@
 <script src="../js/app.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  requireUser();
+  if (!requireUser()) return;
   const session = getSession();
+  if (!session) return;
 
   // Populate welcome banner
   el('welcome-name').textContent   = `Hello, ${session.name.split(' ')[0]}!`;

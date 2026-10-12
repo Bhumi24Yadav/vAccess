@@ -249,8 +249,9 @@
 <script src="../js/app.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  requireAdmin();
+  if (!requireAdmin()) return;
   const session = getSession();
+  if (!session) return;
 
   // Sidebar user info
   el('sidebar-name').textContent = session.name;

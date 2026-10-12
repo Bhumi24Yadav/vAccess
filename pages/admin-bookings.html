@@ -253,8 +253,9 @@
 let currentBookings = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-  requireAdmin();
+  if (!requireAdmin()) return;
   const session = getSession();
+  if (!session) return;
 
   // Sidebar info
   el('sidebar-name').textContent = session.name;

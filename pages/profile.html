@@ -243,8 +243,9 @@
 <script src="../js/app.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  requireLogin();
+  if (!requireLogin()) return;
   const session = getSession();
+  if (!session) return;
 
   // Populate Sidebar
   el('sidebar-name').textContent = session.name;

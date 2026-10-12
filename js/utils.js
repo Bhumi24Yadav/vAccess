@@ -219,22 +219,49 @@ function initModalClose() {
 // ============================================================
 
 function showConfirm({ title, message, icon = '⚠️', confirmText = 'Confirm', confirmClass = 'btn-danger', onConfirm }) {
-  const overlay = el('confirm-dialog-overlay');
+  let overlay = el('confirm-dialog-overlay');
   if (!overlay) {
-    console.warn('Confirm dialog overlay not found in DOM');
-    if (window.confirm(message) && onConfirm) onConfirm();
+    overlay = createElement('div', 'modal-overlay confirm-dialog');
+    overlay.id = 'confirm-dialog-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-body">
+          <div class="confirm-icon" id="confirm-icon">⚠️</div>
+          <div class="confirm-title" id="confirm-title">Are you sure?</div>
+          <div class="confirm-message" id="confirm-message"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" data-modal-close>Cancel</button>
+          <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    initModalClose();
+  }
+
+  const iconEl = el('confirm-icon');
+  if (iconEl) iconEl.textContent = icon;
+  const titleEl = el('confirm-title');
+  if (titleEl) titleEl.textContent = title;
+  const msgEl = el('confirm-message');
+  if (msgEl) msgEl.textContent = message;
+
+  const confirmBtn = el('confirm-ok-btn');
+  if (confirmBtn) {
+    confirmBtn.textContent = confirmText;
+    confirmBtn.className = `btn ${confirmClass}`;
+    confirmBtn.onclick = () => {
+      closeModal('confirm-dialog-overlay');
+      if (typeof onConfirm === 'function') onConfirm();
+    };
+  } else {
+    if (window.confirm(message) && typeof onConfirm === 'function') onConfirm();
     return;
   }
-  el('confirm-icon').textContent = icon;
-  el('confirm-title').textContent = title;
-  el('confirm-message').textContent = message;
-  const confirmBtn = el('confirm-ok-btn');
-  confirmBtn.textContent = confirmText;
-  confirmBtn.className = `btn ${confirmClass}`;
-  confirmBtn.onclick = () => {
-    closeModal('confirm-dialog-overlay');
-    if (onConfirm) onConfirm();
-  };
+
   openModal('confirm-dialog-overlay');
 }
 

@@ -139,8 +139,9 @@
 let currentFilter = 'all';
 
 document.addEventListener('DOMContentLoaded', () => {
-  requireUser();
+  if (!requireUser()) return;
   const session = getSession();
+  if (!session) return;
 
   // Sidebar user
   el('sidebar-name').textContent = session.name;
